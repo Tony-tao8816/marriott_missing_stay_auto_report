@@ -1,0 +1,40 @@
+{
+  "name": "marriott-missing-stay-auto-report",
+  "version": "1.0.0",
+  "description": "CLI tool for automating Marriott missing stay requests with Node.js and Playwright.",
+  "main": "src/index.js",
+  "bin": {
+    "marriott-missing-stay": "./src/index.js"
+  },
+  "scripts": {
+    "start": "node src/index.js run",
+    "run": "node src/index.js run",
+    "dry-run": "node src/index.js run --dry-run --input data/stays.example.json --site-config config/site.example.json",
+    "validate-config": "node src/index.js validate-config --site-config config/site.example.json"
+  },
+  "keywords": [
+    "marriott",
+    "playwright",
+    "automation",
+    "missing-stay"
+  ],
+  "dependencies": {
+    "commander": "^12.1.0",
+    "csv-parse": "^5.5.6",
+    "csv-stringify": "^6.7.0",
+    "dotenv": "^16.4.5",
+    "pako": "^2.1.0",
+    "pdf-lib": "^1.17.1",
+    "pdf-parse": "^1.1.1",
+    "pino": "^9.5.0",
+    "playwright": "^1.48.2",
+    "xlsx": "^0.18.5",
+    "zod": "^3.23.8"
+  },
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  }
+}

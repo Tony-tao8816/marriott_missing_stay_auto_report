@@ -1,0 +1,28 @@
+{
+  "baseUrl": "https://www.marriott.com",
+  "login": {
+    "url": "https://www.marriott.com/loyalty/sign-in.mi",
+    "selectors": {
+      "username": "input[name='username']",
+      "password": "input[name='password']",
+      "submit": "button[type='submit']",
+      "successIndicator": "[data-testid='account-nav']"
+    }
+  },
+  "missingStay": {
+    "url": "https://www.marriott.com/loyalty/myAccount/missingStayRequest.mi",
+    "settleDelayMs": 1500,
+    "selectors": {
+      "hotelName": "input[name='hotelName']",
+      "checkInDate": "input[name='checkInDate']",
+      "checkOutDate": "input[name='checkOutDate']",
+      "confirmationNumber": "input[name='confirmationNumber']",
+      "hotelCode": "input[name='hotelCode']",
+      "country": "select[name='country']",
+      "notes": "textarea[name='comments']",
+      "submit": "button[type='submit']",
+      "successMessage": "[data-testid='missing-stay-success']",
+      "errorMessage": "[data-testid='missing-stay-error']"
+    }
+  }
+}
