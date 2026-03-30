@@ -28,7 +28,7 @@ class RyyAsiaClient {
       const response = await axios.post(
         `${this.baseUrl}/api/public/genToken`,
         {
-          mailbox: this.adminMailbox,
+          email: this.adminMailbox,
           password: this.adminPassword
         },
         {
@@ -36,8 +36,9 @@ class RyyAsiaClient {
         }
       );
 
-      if (response.data && response.data.token) {
-        this.token = response.data.token;
+      // API 返回结构: { code: 200, message: 'success', data: { token: 'xxx' } }
+      if (response.data && response.data.code === 200 && response.data.data && response.data.data.token) {
+        this.token = response.data.data.token;
         return this.token;
       }
 
@@ -73,23 +74,32 @@ class RyyAsiaClient {
       const response = await axios.post(
         `${this.baseUrl}/api/public/addUser`,
         {
-          user: userData.user,
-          password: userData.password
+          list: [
+            {
+              email: userData.email,
+              password: userData.password
+            }
+          ]
         },
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.token}`
+            'Authorization': this.token
           }
         }
       );
+
+      // 检查 API 返回的业务状态码
+      if (response.data && response.data.code !== 200) {
+        throw new Error(`添加用户失败: ${response.data.code} - ${response.data.message}`);
+      }
 
       return response.data;
     } catch (error) {
       if (error.response) {
         throw new Error(`添加用户失败: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
       }
-      throw new Error(`添加用户失败: ${error.message}`);
+      throw error;
     }
   }
 
@@ -104,26 +114,37 @@ class RyyAsiaClient {
     await this.ensureToken();
 
     try {
+      const requestBody = {};
+      if (params.toEmail) requestBody.toEmail = params.toEmail;
+      if (params.sendEmail) requestBody.sendEmail = params.sendEmail;
+      if (params.subject) requestBody.subject = params.subject;
+      if (params.content) requestBody.content = params.content;
+      requestBody.type = params.type ?? 0;
+      requestBody.num = params.num ?? 1;
+      requestBody.size = params.size ?? 20;
+
       const response = await axios.post(
         `${this.baseUrl}/api/public/emailList`,
-        {
-          to: params.to,
-          limit: params.limit || 10
-        },
+        requestBody,
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.token}`
+            'Authorization': this.token
           }
         }
       );
 
-      return response.data || [];
+      // 检查 API 返回的业务状态码
+      if (response.data && response.data.code !== 200) {
+        throw new Error(`查询邮件失败: ${response.data.code} - ${response.data.message}`);
+      }
+
+      return response.data?.data?.list || [];
     } catch (error) {
       if (error.response) {
         throw new Error(`查询邮件失败: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
       }
-      throw new Error(`查询邮件失败: ${error.message}`);
+      throw error;
     }
   }
 }

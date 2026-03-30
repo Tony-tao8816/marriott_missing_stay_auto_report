@@ -30,14 +30,15 @@ class RyyAsiaService {
    * @returns {Promise<Object>} { user, email, password }
    */
   async createMailbox(username, password) {
+    const email = `${username}@${this.domain}`;
     const result = await this.client.addUser({
-      user: username,
+      email: email,
       password: password
     });
 
     return {
       user: username,
-      email: `${username}@${this.domain}`,
+      email: email,
       password: password,
       raw: result
     };
@@ -46,13 +47,15 @@ class RyyAsiaService {
   /**
    * 获取邮箱中的最新邮件
    * @param {string} email - 完整邮箱地址
-   * @param {number} [limit=10] - 数量限制
+   * @param {number} [size=20] - 每页数量
    * @returns {Promise<Array>} 邮件列表
    */
-  async getEmails(email, limit = 10) {
+  async getEmails(email, size = 20) {
     return await this.client.emailList({
-      to: email,
-      limit: limit
+      toEmail: email,
+      type: 0,
+      num: 1,
+      size: size
     });
   }
 
