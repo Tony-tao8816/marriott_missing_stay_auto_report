@@ -11,7 +11,8 @@
     "run": "node src/index.js run",
     "dry-run": "node src/index.js run --dry-run --input data/stays.example.json --site-config config/site.example.json",
     "validate-config": "node src/index.js validate-config --site-config config/site.example.json",
-    "email-test": "node --check src/email/config.js && node --check src/email/verification-parser.js && node --check src/email/email-service.js && node --check src/email/index.js && node --check src/email/example-usage.js"
+    "email-test": "node --check src/email/config.js && node --check src/email/verification-parser.js && node --check src/email/email-service.js && node --check src/email/index.js && node --check src/email/example-usage.js",
+    "ryy-asia-test": "node --check src/email/ryyasia/ryyasia-client.js && node --check src/email/ryyasia/ryyasia-service.js && node --check src/email/ryyasia/index.js && node --check src/email/ryyasia/example-usage.js"
   },
   "keywords": [
     "marriott",
@@ -20,6 +21,7 @@
     "missing-stay"
   ],
   "dependencies": {
+    "axios": "^1.14.0",
     "commander": "^12.1.0",
     "csv-parse": "^5.5.6",
     "csv-stringify": "^6.7.0",
