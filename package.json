@@ -10,7 +10,8 @@
     "start": "node src/index.js run",
     "run": "node src/index.js run",
     "dry-run": "node src/index.js run --dry-run --input data/stays.example.json --site-config config/site.example.json",
-    "validate-config": "node src/index.js validate-config --site-config config/site.example.json"
+    "validate-config": "node src/index.js validate-config --site-config config/site.example.json",
+    "email-test": "node --check src/email/config.js && node --check src/email/verification-parser.js && node --check src/email/email-service.js && node --check src/email/index.js && node --check src/email/example-usage.js"
   },
   "keywords": [
     "marriott",
@@ -23,6 +24,8 @@
     "csv-parse": "^5.5.6",
     "csv-stringify": "^6.7.0",
     "dotenv": "^16.4.5",
+    "imap": "^0.8.19",
+    "mailparser": "^3.9.6",
     "pako": "^2.1.0",
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.1",
