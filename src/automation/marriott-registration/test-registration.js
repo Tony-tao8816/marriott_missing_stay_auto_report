@@ -142,49 +142,76 @@ async function testRegistration() {
   console.log('⏳ 等待页面加载...');
   await new Promise(r => setTimeout(r, 3000));
 
-  // 填写表单
-  console.log('\n📝 Step 4: 填写注册表单...\n');
+  // 填写表单 - 使用 JavaScript 注入方式
+  console.log('\n📝 Step 4: 填写注册表单 (JavaScript 注入)...\n');
 
-  // 使用 name 属性定位（更稳定）
-  const fields = [
-    { name: 'First Name', selector: '[name="input-text-First Name"]', value: firstName },
-    { name: 'Last Name', selector: '[name="input-text-Last Name"]', value: lastName },
-    { name: 'ZIP Code', selector: '[name="input-text-Zip/Postal Code"]', value: zipCode.toString() },
-    { name: 'Email', selector: '[name="input-text-Email"]', value: email },
-    { name: 'Password', selector: '#password', value: password }
-  ];
+  // 构建 JavaScript 代码来填写表单
+  const fillScript = `
+    (function() {
+      // First Name
+      const fn = document.querySelector('[name="input-text-First Name"]');
+      if (fn) { fn.value = '${firstName}'; fn.dispatchEvent(new Event('input', { bubbles: true })); }
+      
+      // Last Name
+      const ln = document.querySelector('[name="input-text-Last Name"]');
+      if (ln) { ln.value = '${lastName}'; ln.dispatchEvent(new Event('input', { bubbles: true })); }
+      
+      // ZIP
+      const zip = document.querySelector('[name="input-text-Zip/Postal Code"]');
+      if (zip) { zip.value = '${zipCode}'; zip.dispatchEvent(new Event('input', { bubbles: true })); }
+      
+      // Email
+      const em = document.querySelector('[name="input-text-Email"]');
+      if (em) { em.value = '${email}'; em.dispatchEvent(new Event('input', { bubbles: true })); }
+      
+      // Password
+      const pw = document.querySelector('#password');
+      if (pw) { pw.value = '${password}'; pw.dispatchEvent(new Event('input', { bubbles: true })); }
+      
+      // Confirm Password
+      const cpw = document.querySelector('#confirmPassword');
+      if (cpw) { 
+        cpw.disabled = false; 
+        cpw.value = '${password}'; 
+        cpw.dispatchEvent(new Event('input', { bubbles: true })); 
+      }
+      
+      return 'Form filled via JS';
+    })()
+  `;
 
-  for (const field of fields) {
-    try {
-      await execAsync(`${ocbotCmd} fill "${field.selector}" "${field.value}"`, { timeout: 10000 });
-      console.log(`  ✅ ${field.name}: ${field.value}`);
-      await new Promise(r => setTimeout(r, 800));
-    } catch (error) {
-      console.log(`  ❌ ${field.name}: 填写失败 - ${error.message}`);
-    }
-  }
-
-  // 填写 Confirm Password（需要先点击 password 字段使其可用）
-  console.log('  📝 Confirm Password...');
   try {
-    // 先点击 confirmPassword 字段激活它
-    await execAsync(`${ocbotCmd} click "#confirmPassword"`, { timeout: 10000 });
-    await new Promise(r => setTimeout(r, 500));
-    await execAsync(`${ocbotCmd} fill "#confirmPassword" "${password}"`, { timeout: 10000 });
-    console.log(`  ✅ Confirm Password: ${password}`);
-  } catch (error) {
-    console.log(`  ❌ Confirm Password: 填写失败 - ${error.message}`);
-  }
-
-  // 选择国家（USA）- 使用 data-testid
-  console.log('\n🌍 Step 5: 选择国家...');
-  try {
-    // 点击下拉框（使用 aria-label 或 class）
-    await execAsync(`${ocbotCmd} click "[data-testid='USA']"`, { timeout: 10000 });
+    await execAsync(`${ocbotCmd} eval "${fillScript.replace(/"/g, '\\"')}"`, { timeout: 15000 });
+    console.log('  ✅ 表单已通过 JavaScript 填写');
+    console.log(`     First Name: ${firstName}`);
+    console.log(`     Last Name: ${lastName}`);
+    console.log(`     ZIP: ${zipCode}`);
+    console.log(`     Email: ${email}`);
+    console.log(`     Password: ${password}`);
     await new Promise(r => setTimeout(r, 1000));
-    console.log('  ✅ Country: United States (US)\n');
   } catch (error) {
-    console.log(`  ⚠️  国家选择可能失败: ${error.message}\n`);
+    console.log(`  ❌ JavaScript 填写失败: ${error.message}`);
+    console.log('  尝试使用原生 fill 命令...');
+    
+    // 备用：使用原生 fill
+    const fields = [
+      { selector: '[name="input-text-First Name"]', value: firstName },
+      { selector: '[name="input-text-Last Name"]', value: lastName },
+      { selector: '[name="input-text-Zip/Postal Code"]', value: zipCode.toString() },
+      { selector: '[name="input-text-Email"]', value: email },
+      { selector: '#password', value: password },
+      { selector: '#confirmPassword', value: password }
+    ];
+    
+    for (const field of fields) {
+      try {
+        await execAsync(`${ocbotCmd} fill "${field.selector}" "${field.value}"`, { timeout: 5000 });
+        console.log(`    ✅ ${field.selector}`);
+      } catch (e) {
+        console.log(`    ❌ ${field.selector}: ${e.message}`);
+      }
+      await new Promise(r => setTimeout(r, 500));
+    }
   }
 
   // 截图保存
