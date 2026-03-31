@@ -87,22 +87,24 @@ class MarriottRegistration {
   async fillRegistrationForm(data) {
     const { firstName, lastName, email, password, country, zipCode } = data;
     
-    // 填写名字
-    await this.execOcbot(`fill "#firstNameToCreate" "${firstName}"`);
-    await this.execOcbot(`fill "#lastNameToCreate" "${lastName}"`);
+    // 填写名字（使用 name 属性，更稳定）
+    await this.execOcbot(`fill "[name='input-text-First Name']" "${firstName}"`);
+    await this.execOcbot(`fill "[name='input-text-Last Name']" "${lastName}"`);
     
     // 选择国家
     await this.selectCountry(country);
     
     // 填写邮编
-    await this.execOcbot(`fill "#postalCodeToCreate" "${zipCode}"`);
+    await this.execOcbot(`fill "[name='input-text-Zip/Postal Code']" "${zipCode}"`);
     
     // 填写邮箱
-    await this.execOcbot(`fill "#emailToCreate" "${email}"`);
+    await this.execOcbot(`fill "[name='input-text-Email']" "${email}"`);
     
     // 填写密码
-    await this.execOcbot(`fill "#passwordToCreate" "${password}"`);
-    await this.execOcbot(`fill "#confirmPasswordToCreate" "${password}"`);
+    await this.execOcbot(`fill "#password" "${password}"`);
+    await this.execOcbot(`click "#confirmPassword"`);
+    await this.sleep(500);
+    await this.execOcbot(`fill "#confirmPassword" "${password}"`);
     
     return { success: true, message: 'Form filled' };
   }

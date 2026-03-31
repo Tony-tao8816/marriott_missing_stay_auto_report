@@ -9,7 +9,7 @@
 
 const { exec } = require('child_process');
 const { promisify } = require('util');
-const { RyyAsiaService } = require('../email/ryyasia');
+const { RyyAsiaService } = require('../../email/ryyasia');
 const dotenv = require('dotenv');
 const readline = require('readline');
 
@@ -92,8 +92,35 @@ async function testRegistration() {
   console.log('🌐 Step 2: 启动浏览器（可见模式）...');
   console.log('   正在启动 ocbot...\n');
   
+  // 尝试多个可能的 ocbot 路径
+  const ocbotPaths = [
+    'ocbot',
+    '/Applications/Ocbot.app/Contents/MacOS/ocbot',
+    '/usr/local/bin/ocbot',
+    '/opt/homebrew/bin/ocbot',
+    process.env.OCBOT_PATH
+  ].filter(Boolean);
+  
+  let ocbotCmd = null;
+  for (const path of ocbotPaths) {
+    try {
+      await execAsync(`${path} --version`, { timeout: 5000 });
+      ocbotCmd = path;
+      console.log(`   找到 ocbot: ${path}\n`);
+      break;
+    } catch {
+      continue;
+    }
+  }
+  
+  if (!ocbotCmd) {
+    console.log('❌ 未找到 ocbot，请确保已安装 ocbot.app');
+    console.log('   下载地址: https://oc.bot\n');
+    process.exit(1);
+  }
+  
   try {
-    await execAsync('ocbot start --headed', { timeout: 30000 });
+    await execAsync(`${ocbotCmd} start --headed`, { timeout: 30000 });
     console.log('✅ 浏览器已启动\n');
   } catch (error) {
     console.log('⚠️  浏览器可能已启动或启动失败，继续...\n');
@@ -104,7 +131,7 @@ async function testRegistration() {
   const regUrl = 'https://www.marriott.com/loyalty/createAccount/createAccountPage1.mi';
   
   try {
-    await execAsync(`ocbot navigate "${regUrl}"`, { timeout: 30000 });
+    await execAsync(`${ocbotCmd} navigate "${regUrl}"`, { timeout: 30000 });
     console.log('✅ 页面加载完成\n');
   } catch (error) {
     console.log(`❌ 导航失败: ${error.message}`);
@@ -118,33 +145,43 @@ async function testRegistration() {
   // 填写表单
   console.log('\n📝 Step 4: 填写注册表单...\n');
 
+  // 使用 name 属性定位（更稳定）
   const fields = [
-    { name: 'First Name', selector: '#firstNameToCreate', value: firstName },
-    { name: 'Last Name', selector: '#lastNameToCreate', value: lastName },
-    { name: 'ZIP Code', selector: '#postalCodeToCreate', value: zipCode.toString() },
-    { name: 'Email', selector: '#emailToCreate', value: email },
-    { name: 'Password', selector: '#passwordToCreate', value: password },
-    { name: 'Confirm Password', selector: '#confirmPasswordToCreate', value: password }
+    { name: 'First Name', selector: '[name="input-text-First Name"]', value: firstName },
+    { name: 'Last Name', selector: '[name="input-text-Last Name"]', value: lastName },
+    { name: 'ZIP Code', selector: '[name="input-text-Zip/Postal Code"]', value: zipCode.toString() },
+    { name: 'Email', selector: '[name="input-text-Email"]', value: email },
+    { name: 'Password', selector: '#password', value: password }
   ];
 
   for (const field of fields) {
     try {
-      await execAsync(`ocbot fill "${field.selector}" "${field.value}"`, { timeout: 10000 });
+      await execAsync(`${ocbotCmd} fill "${field.selector}" "${field.value}"`, { timeout: 10000 });
       console.log(`  ✅ ${field.name}: ${field.value}`);
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 800));
     } catch (error) {
       console.log(`  ❌ ${field.name}: 填写失败 - ${error.message}`);
     }
   }
 
-  // 选择国家（USA）
+  // 填写 Confirm Password（需要先点击 password 字段使其可用）
+  console.log('  📝 Confirm Password...');
+  try {
+    // 先点击 confirmPassword 字段激活它
+    await execAsync(`${ocbotCmd} click "#confirmPassword"`, { timeout: 10000 });
+    await new Promise(r => setTimeout(r, 500));
+    await execAsync(`${ocbotCmd} fill "#confirmPassword" "${password}"`, { timeout: 10000 });
+    console.log(`  ✅ Confirm Password: ${password}`);
+  } catch (error) {
+    console.log(`  ❌ Confirm Password: 填写失败 - ${error.message}`);
+  }
+
+  // 选择国家（USA）- 使用 data-testid
   console.log('\n🌍 Step 5: 选择国家...');
   try {
-    // 点击下拉框
-    await execAsync('ocbot click "#countryToCreate"', { timeout: 10000 });
+    // 点击下拉框（使用 aria-label 或 class）
+    await execAsync(`${ocbotCmd} click "[data-testid='USA']"`, { timeout: 10000 });
     await new Promise(r => setTimeout(r, 1000));
-    // 选择 USA
-    await execAsync('ocbot click "option[value=\'US\']"', { timeout: 10000 });
     console.log('  ✅ Country: United States (US)\n');
   } catch (error) {
     console.log(`  ⚠️  国家选择可能失败: ${error.message}\n`);
@@ -153,7 +190,7 @@ async function testRegistration() {
   // 截图保存
   console.log('📸 Step 6: 截图保存...');
   try {
-    await execAsync('ocbot screenshot registration-test-filled.png', { timeout: 10000 });
+    await execAsync(`${ocbotCmd} screenshot registration-test-filled.png`, { timeout: 10000 });
     console.log('  ✅ 截图已保存: registration-test-filled.png\n');
   } catch (error) {
     console.log(`  ⚠️  截图失败: ${error.message}\n`);
@@ -178,7 +215,7 @@ async function testRegistration() {
   if (answer.toLowerCase() === 'yes') {
     console.log('\n📝 正在提交注册...');
     try {
-      await execAsync('ocbot click "button[type=submit]"', { timeout: 10000 });
+      await execAsync(`${ocbotCmd} click "button[type=submit]"`, { timeout: 10000 });
       console.log('✅ 注册已提交！');
       console.log('\n请检查浏览器中的注册结果。');
     } catch (error) {
