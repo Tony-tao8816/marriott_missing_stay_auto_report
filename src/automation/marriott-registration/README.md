@@ -18,12 +18,39 @@
 | First Name | 名 |
 | Last Name | 姓 |
 | Email | 邮箱（使用 ryy.asia） |
-| Password | 密码 |
-| Confirm Password | 确认密码 |
-| Country | 国家 |
-| ZIP/Postal Code | 邮政编码 |
+| Password | **自动生成** (见下方规则) |
+| Confirm Password | 同上 |
+| Country | 国家 (默认: US) |
+| ZIP/Postal Code | 邮政编码 (默认: 随机加州/华盛顿州) |
+
+## 密码生成规则
+
+**格式**: `Lastname首字母大写` + `Firstname首字母小写` + `@marriott`
+
+**示例**:
+- 姓名: Xie Min
+- 密码: `Xm@marriott`
+
+## ZIP Code 规则
+
+**默认**: 随机生成美国加州或华盛顿州邮编
+- **加州 (CA)**: 90001-96162
+- **华盛顿州 (WA)**: 98001-99403
+
+也可手动指定: `--zip-code 90210`
 
 ## 使用示例
+
+```bash
+# 基础用法 (美国 + 随机邮编 + 自动生成密码)
+npm run marriott-register -- -f "Min" -l "Xie"
+
+# 指定加州邮编
+npm run marriott-register -- -f "Min" -l "Xie" -z "90210"
+
+# 显示浏览器窗口 (调试用)
+npm run marriott-register -- -f "Min" -l "Xie" --headed
+```
 
 ```javascript
 const { MarriottRegistration } = require('./marriott-registration');
@@ -38,14 +65,16 @@ const reg = new MarriottRegistration({
   }
 });
 
-// 注册新会员
+// 注册新会员 (自动生成密码和邮编)
 const result = await reg.register({
   firstName: 'Min',
-  lastName: 'Xie',
-  password: 'SecurePass123!',
-  country: 'CN',
-  zipCode: '100000'
+  lastName: 'Xie'
+  // password 自动生成: Xm@marriott
+  // country 默认: US
+  // zipCode 默认: 随机加州/华盛顿
 });
 
 console.log('注册成功:', result.email);
+console.log('密码:', result.password);     // Xm@marriott
+console.log('邮编:', result.zipCode);      // 例如: 92101 (加州)
 ```

@@ -172,20 +172,65 @@ class MarriottRegistration {
   }
 
   /**
+   * 生成密码
+   * 格式: Lastname首字母大写 + Firstname首字母小写 + @marriott
+   * 示例: Xie Min -> Xm@marriott
+   * @param {string} firstName
+   * @param {string} lastName
+   * @returns {string}
+   */
+  generatePassword(firstName, lastName) {
+    const firstInitial = firstName.charAt(0).toLowerCase();
+    const lastInitial = lastName.charAt(0).toUpperCase();
+    return `${lastInitial}${firstInitial}@marriott`;
+  }
+
+  /**
+   * 获取随机美国邮编
+   * 加州: 90001-96162
+   * 华盛顿州: 98001-99403
+   * @returns {string}
+   */
+  getRandomUSZipCode() {
+    // 随机选择州: 0=加州, 1=华盛顿州
+    const state = Math.random() < 0.5 ? 'CA' : 'WA';
+    let zip;
+    
+    if (state === 'CA') {
+      // 加州邮编范围
+      zip = Math.floor(Math.random() * (96162 - 90001 + 1)) + 90001;
+    } else {
+      // 华盛顿州邮编范围
+      zip = Math.floor(Math.random() * (99403 - 98001 + 1)) + 98001;
+    }
+    
+    return zip.toString();
+  }
+
+  /**
    * 完整的注册流程
    * @param {Object} userData
    * @param {string} userData.firstName
    * @param {string} userData.lastName
-   * @param {string} userData.password
-   * @param {string} userData.country - 国家代码 (默认 'CN')
-   * @param {string} userData.zipCode - 邮政编码 (默认 '100000')
+   * @param {string} [userData.country] - 国家代码 (默认 'US')
+   * @param {string} [userData.zipCode] - 邮政编码 (默认随机加州/华盛顿)
    */
   async register(userData) {
     const startTime = Date.now();
+    
+    // 自动生成密码
+    const password = this.generatePassword(userData.firstName, userData.lastName);
+    
+    // 使用随机邮编或用户指定
+    const zipCode = userData.zipCode || this.getRandomUSZipCode();
+    const country = userData.country || 'US';
+    
     const result = {
       success: false,
       email: null,
-      password: userData.password,
+      password: password,
+      country: country,
+      zipCode: zipCode,
       duration: 0,
       steps: []
     };
@@ -214,15 +259,17 @@ class MarriottRegistration {
 
       // 4. 填写表单
       this.logger.info('Step 4: Filling registration form...');
+      this.logger.info(`  Password: ${password}`);
+      this.logger.info(`  Country: ${country}, ZIP: ${zipCode}`);
       await this.fillRegistrationForm({
         firstName: userData.firstName,
         lastName: userData.lastName,
         email,
-        password: userData.password,
-        country: userData.country || 'CN',
-        zipCode: userData.zipCode || '100000'
+        password: password,
+        country: country,
+        zipCode: zipCode
       });
-      result.steps.push({ step: 'fill_form', status: 'success' });
+      result.steps.push({ step: 'fill_form', status: 'success', password, country, zipCode });
 
       // 5. 提交注册
       this.logger.info('Step 5: Submitting registration...');

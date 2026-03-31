@@ -18,9 +18,8 @@ program
   .description('Register a new Marriott member')
   .requiredOption('-f, --first-name <name>', 'First name')
   .requiredOption('-l, --last-name <name>', 'Last name')
-  .requiredOption('-p, --password <password>', 'Password')
-  .option('-c, --country <code>', 'Country code', 'CN')
-  .option('-z, --zip-code <code>', 'ZIP/Postal code', '100000')
+  .option('-c, --country <code>', 'Country code (default: US)', 'US')
+  .option('-z, --zip-code <code>', 'ZIP/Postal code (default: random CA/WA)')
   .option('--headed', 'Run browser in headed mode (visible)', false)
   .action(async (options) => {
     try {
@@ -36,11 +35,18 @@ program
       });
 
       console.log('🚀 Starting Marriott registration...\n');
+      console.log(`📝 Name: ${options.firstName} ${options.lastName}`);
+      console.log(`🌍 Country: ${options.country}`);
+      if (options.zipCode) {
+        console.log(`📮 ZIP: ${options.zipCode}`);
+      } else {
+        console.log('📮 ZIP: (random CA/WA)');
+      }
+      console.log('');
       
       const result = await reg.register({
         firstName: options.firstName,
         lastName: options.lastName,
-        password: options.password,
         country: options.country,
         zipCode: options.zipCode
       });
@@ -48,6 +54,8 @@ program
       console.log('\n✅ Registration successful!');
       console.log('📧 Email:', result.email);
       console.log('🔑 Password:', result.password);
+      console.log('🌍 Country:', result.country);
+      console.log('📮 ZIP Code:', result.zipCode);
       console.log('⏱️ Duration:', `${result.duration}ms`);
       console.log('\n📋 Steps completed:');
       result.steps.forEach((step, i) => {
