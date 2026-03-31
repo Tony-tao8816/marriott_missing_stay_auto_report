@@ -15,6 +15,8 @@
     "ryy-asia-test": "node --check src/email/ryyasia/ryyasia-client.js && node --check src/email/ryyasia/ryyasia-service.js && node --check src/email/ryyasia/index.js && node --check src/email/ryyasia/example-usage.js",
     "marriott-register": "node src/automation/marriott-registration/cli.js register",
     "test-registration": "node src/automation/marriott-registration/test-registration.js",
+    "test-registration-browser": "node src/automation/marriott-registration/test-registration-browser.js",
+    "test-registration-chrome": "node src/automation/marriott-registration/test-registration-chrome.js",
     "test-email": "node src/automation/marriott-registration/cli.js test-email"
   },
   "keywords": [
