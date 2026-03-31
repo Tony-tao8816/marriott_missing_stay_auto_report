@@ -208,6 +208,20 @@ class MarriottRegistration {
   }
 
   /**
+   * 生成邮箱用户名
+   * 格式: firstname_lastname (全小写)
+   * 示例: Xie Min -> min_xie@ryy.asia
+   * @param {string} firstName
+   * @param {string} lastName
+   * @returns {string}
+   */
+  generateEmailUsername(firstName, lastName) {
+    const first = firstName.toLowerCase().trim();
+    const last = lastName.toLowerCase().trim();
+    return `${first}_${last}`;
+  }
+
+  /**
    * 完整的注册流程
    * @param {Object} userData
    * @param {string} userData.firstName
@@ -225,9 +239,14 @@ class MarriottRegistration {
     const zipCode = userData.zipCode || this.getRandomUSZipCode();
     const country = userData.country || 'US';
     
+    // 生成邮箱用户名: firstname_lastname
+    const username = this.generateEmailUsername(userData.firstName, userData.lastName);
+    const email = `${username}@ryy.asia`;
+    
     const result = {
       success: false,
-      email: null,
+      email: email,
+      username: username,
       password: password,
       country: country,
       zipCode: zipCode,
@@ -238,14 +257,12 @@ class MarriottRegistration {
     try {
       // 1. 创建邮箱
       this.logger.info('Step 1: Creating email account...');
-      const username = `marriott${Date.now()}`;
-      const email = `${username}@ryy.asia`;
+      this.logger.info(`  Email: ${email}`);
       
       if (this.emailService) {
-        await this.emailService.createMailbox(username, userData.password);
+        await this.emailService.createMailbox(username, password);
       }
-      result.email = email;
-      result.steps.push({ step: 'create_email', status: 'success', email });
+      result.steps.push({ step: 'create_email', status: 'success', email, username });
 
       // 2. 启动浏览器
       this.logger.info('Step 2: Starting browser...');

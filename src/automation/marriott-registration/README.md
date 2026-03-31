@@ -17,11 +17,19 @@
 |------|------|
 | First Name | 名 |
 | Last Name | 姓 |
-| Email | 邮箱（使用 ryy.asia） |
+| Email | **自动生成** (见下方规则) |
 | Password | **自动生成** (见下方规则) |
 | Confirm Password | 同上 |
 | Country | 国家 (默认: US) |
 | ZIP/Postal Code | 邮政编码 (默认: 随机加州/华盛顿州) |
+
+## 邮箱生成规则
+
+**格式**: `firstname_lastname@ryy.asia` (全小写)
+
+**示例**:
+- 姓名: Xie Min
+- 邮箱: `min_xie@ryy.asia`
 
 ## 密码生成规则
 
@@ -65,16 +73,18 @@ const reg = new MarriottRegistration({
   }
 });
 
-// 注册新会员 (自动生成密码和邮编)
+// 注册新会员 (自动生成邮箱、密码和邮编)
 const result = await reg.register({
   firstName: 'Min',
   lastName: 'Xie'
+  // email 自动生成: min_xie@ryy.asia
   // password 自动生成: Xm@marriott
   // country 默认: US
   // zipCode 默认: 随机加州/华盛顿
 });
 
-console.log('注册成功:', result.email);
-console.log('密码:', result.password);     // Xm@marriott
-console.log('邮编:', result.zipCode);      // 例如: 92101 (加州)
+console.log('注册成功:', result.email);     // min_xie@ryy.asia
+console.log('用户名:', result.username);   // min_xie
+console.log('密码:', result.password);      // Xm@marriott
+console.log('邮编:', result.zipCode);       // 例如: 92101 (加州)
 ```

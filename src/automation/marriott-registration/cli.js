@@ -53,6 +53,7 @@ program
 
       console.log('\n✅ Registration successful!');
       console.log('📧 Email:', result.email);
+      console.log('👤 Username:', result.username);
       console.log('🔑 Password:', result.password);
       console.log('🌍 Country:', result.country);
       console.log('📮 ZIP Code:', result.zipCode);
