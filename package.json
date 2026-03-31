@@ -12,7 +12,9 @@
     "dry-run": "node src/index.js run --dry-run --input data/stays.example.json --site-config config/site.example.json",
     "validate-config": "node src/index.js validate-config --site-config config/site.example.json",
     "email-test": "node --check src/email/config.js && node --check src/email/verification-parser.js && node --check src/email/email-service.js && node --check src/email/index.js && node --check src/email/example-usage.js",
-    "ryy-asia-test": "node --check src/email/ryyasia/ryyasia-client.js && node --check src/email/ryyasia/ryyasia-service.js && node --check src/email/ryyasia/index.js && node --check src/email/ryyasia/example-usage.js"
+    "ryy-asia-test": "node --check src/email/ryyasia/ryyasia-client.js && node --check src/email/ryyasia/ryyasia-service.js && node --check src/email/ryyasia/index.js && node --check src/email/ryyasia/example-usage.js",
+    "marriott-register": "node src/automation/marriott-registration/cli.js register",
+    "test-email": "node src/automation/marriott-registration/cli.js test-email"
   },
   "keywords": [
     "marriott",
