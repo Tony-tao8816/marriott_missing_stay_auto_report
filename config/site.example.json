@@ -5,6 +5,24 @@
     "selectors": {
       "username": "input[name='username']",
       "password": "input[name='password']",
+      "rememberMe": "input[name='rememberMe']",
+      "submit": "button[type='submit']",
+      "successIndicator": "[data-testid='account-nav']"
+    }
+  },
+  "registration": {
+    "url": "https://www.marriott.com/loyalty/createAccount/createAccountPage1.mi",
+    "selectors": {
+      "firstName": "input[name='input-text-First Name']",
+      "lastName": "input[name='input-text-Last Name']",
+      "country": "#countryToCreate",
+      "zipCode": "input[name='input-text-Zip/Postal Code']",
+      "email": "input[name='input-text-Email']",
+      "password": "#password",
+      "confirmPassword": "#confirmPassword",
+      "rememberMe": "input[name='rememberMe']",
+      "marketingEmailsOptIn": "input[name='marketingEmails'][value='true']",
+      "marketingEmailsOptOut": "input[name='marketingEmails'][value='false']",
       "submit": "button[type='submit']",
       "successIndicator": "[data-testid='account-nav']"
     }
@@ -13,13 +31,21 @@
     "url": "https://www.marriott.com/loyalty/myAccount/missingStayRequest.mi",
     "settleDelayMs": 1500,
     "selectors": {
+      "thirdPartyBookingYes": "input[name='thirdPartyBooking'][value='yes']",
+      "thirdPartyBookingNo": "input[name='thirdPartyBooking'][value='no']",
+      "phoneNumber": "input[name='phoneNumber']",
       "hotelName": "input[name='hotelName']",
       "checkInDate": "input[name='checkInDate']",
       "checkOutDate": "input[name='checkOutDate']",
+      "billCopyDigital": "input[name='billCopy'][value='digital']",
+      "billCopyMail": "input[name='billCopy'][value='mail']",
       "confirmationNumber": "input[name='confirmationNumber']",
+      "roomNumber": "input[name='roomNumber']",
+      "memberNumber": "input[name='memberNumber']",
       "hotelCode": "input[name='hotelCode']",
       "country": "select[name='country']",
       "notes": "textarea[name='comments']",
+      "attachmentInput": "input[type='file']",
       "submit": "button[type='submit']",
       "successMessage": "[data-testid='missing-stay-success']",
       "errorMessage": "[data-testid='missing-stay-error']"

@@ -142,6 +142,69 @@ JW Marriott Hotel Shenzhen,2026-02-12,2026-02-14,ABC12345,SZXJW,CN,Business trip
 
 ## 使用方式
 
+### OpenCLI 命令
+
+登录万豪账户：
+
+```bash
+opencli loginMarriottAccount \
+  --email-or-member-number jane@example.com \
+  --password 'Secret123!' \
+  --remember-me true
+```
+
+创建万豪会员：
+
+```bash
+opencli createMarriottAccount \
+  --first-name Jane \
+  --last-name Doe \
+  --country USA \
+  --zip-code 10001 \
+  --email jane@example.com \
+  --password 'Secret123!' \
+  --remember-me true \
+  --marketing-emails false
+```
+
+提交缺失住宿记录：
+
+```bash
+opencli MarriottMissingStayRequest \
+  --third-party-booking no \
+  --phone-number 13800138000 \
+  --hotel-name "Marriott Marquis" \
+  --check-in-date 2026-04-01 \
+  --check-out-date 2026-04-03 \
+  --bill-copy digital \
+  --confirmation-number ABC123 \
+  --comments "Please credit this stay" \
+  --attachment /path/to/bill.pdf
+```
+
+`MarriottMissingStayRequest` 默认复用前一次登录或注册后保存的会话文件。
+
+一条命令串起登录/注册和补登：
+
+```bash
+opencli MarriottIntegratedFlow \
+  --account-mode login \
+  --email-or-member-number jane@example.com \
+  --password 'Secret123!' \
+  --remember-me true \
+  --third-party-booking no \
+  --phone-number 13800138000 \
+  --hotel-name "Marriott Marquis" \
+  --check-in-date 2026-04-01 \
+  --check-out-date 2026-04-03 \
+  --bill-copy digital \
+  --confirmation-number ABC123 \
+  --comments "Please credit this stay" \
+  --attachment /path/to/bill.pdf
+```
+
+如果使用新建账号模式，把 `--account-mode` 改成 `create` 并补齐 `--first-name --last-name --country --zip-code --email --password`。
+
 ### 1. 仅校验配置
 
 ```bash
@@ -209,3 +272,7 @@ node src/index.js run --input data/stays.example.csv --site-config config/site.j
 - 接入邮件通知
 - 增加 SQLite 运行历史归档
 - 为不同地区站点维护多套选择器配置
+
+## Legacy Status
+
+旧的 `ocbot` / `agent-browser` 实验代码和相关旧命令已经下线，当前只保留 `opencli` 和新的 Playwright 主线。

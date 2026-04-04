@@ -1,7 +1,9 @@
-const { RyyAsiaClient } = require('./ryyasia-client');
-const { RyyAsiaService } = require('./ryyasia-service');
+const { RyyAsiaApiClient } = require('../../infra/email/ryyasia-api-client');
+const { RyyAsiaApiEmailService } = require('../../infra/email/ryyasia-api-email-service');
 
 module.exports = {
-  RyyAsiaClient,
-  RyyAsiaService
+  RyyAsiaClient: RyyAsiaApiClient,
+  RyyAsiaService: RyyAsiaApiEmailService,
+  RyyAsiaApiClient,
+  RyyAsiaApiEmailService
 };

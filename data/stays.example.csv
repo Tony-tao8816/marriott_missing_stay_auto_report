@@ -1,3 +1,3 @@
-hotelName,checkInDate,checkOutDate,confirmationNumber,hotelCode,country,notes
-JW Marriott Hotel Shenzhen,2026-02-12,2026-02-14,ABC12345,SZXJW,CN,Business trip
-Courtyard Shanghai Pudong,2026-03-01,2026-03-03,XYZ67890,,CN,
+hotelName,checkInDate,checkOutDate,confirmationNumber,roomNumber,memberNumber,hotelCode,country,notes,attachmentPath
+JW Marriott Hotel Shenzhen,2026-02-12,2026-02-14,ABC12345,1821,123456789,SZXJW,CN,Business trip,./sample-folios/jw-shenzhen-folio.pdf
+Courtyard Shanghai Pudong,2026-03-01,2026-03-03,XYZ67890,,123456789,,CN,,

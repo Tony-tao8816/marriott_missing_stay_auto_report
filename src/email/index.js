@@ -1,26 +1,9 @@
-const {
-  EMAIL_PROVIDER_TEMPLATES,
-  EncryptedConfigStore,
-  createEmailConfig,
-  createEncryptedConfigStore,
-  validateEmailConfig
-} = require('./config');
-const { EmailService, formatImapDate } = require('./email-service');
-const {
-  extractVerificationCode,
-  extractVerificationCodes,
-  normalizeEmailContent
-} = require('./verification-parser');
+const { RyyAsiaApiClient } = require('../infra/email/ryyasia-api-client');
+const { RyyAsiaApiEmailService } = require('../infra/email/ryyasia-api-email-service');
 
 module.exports = {
-  EMAIL_PROVIDER_TEMPLATES,
-  EncryptedConfigStore,
-  EmailService,
-  createEmailConfig,
-  createEncryptedConfigStore,
-  extractVerificationCode,
-  extractVerificationCodes,
-  formatImapDate,
-  normalizeEmailContent,
-  validateEmailConfig
+  RyyAsiaClient: RyyAsiaApiClient,
+  RyyAsiaService: RyyAsiaApiEmailService,
+  RyyAsiaApiClient,
+  RyyAsiaApiEmailService
 };

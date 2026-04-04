@@ -2,23 +2,18 @@
   "name": "marriott-missing-stay-auto-report",
   "version": "1.0.0",
   "description": "CLI tool for automating Marriott missing stay requests with Node.js and Playwright.",
-  "main": "src/index.js",
+  "main": "apps/cli/index.js",
   "bin": {
-    "marriott-missing-stay": "./src/index.js"
+    "marriott-missing-stay": "./apps/cli/index.js",
+    "opencli": "./apps/cli/index.js"
   },
   "scripts": {
-    "start": "node src/index.js run",
-    "run": "node src/index.js run",
-    "dry-run": "node src/index.js run --dry-run --input data/stays.example.json --site-config config/site.example.json",
-    "validate-config": "node src/index.js validate-config --site-config config/site.example.json",
-    "email-test": "node --check src/email/config.js && node --check src/email/verification-parser.js && node --check src/email/email-service.js && node --check src/email/index.js && node --check src/email/example-usage.js",
-    "ryy-asia-test": "node --check src/email/ryyasia/ryyasia-client.js && node --check src/email/ryyasia/ryyasia-service.js && node --check src/email/ryyasia/index.js && node --check src/email/ryyasia/example-usage.js",
-    "marriott-register": "node src/automation/marriott-registration/cli.js register",
-    "test-registration": "node src/automation/marriott-registration/test-registration.js",
-    "test-missing-stay": "node src/automation/marriott-missing-stay/test-missing-stay.js",
-    "test-registration-browser": "node src/automation/marriott-registration/test-registration-browser.js",
-    "test-registration-chrome": "node src/automation/marriott-registration/test-registration-chrome.js",
-    "test-email": "node src/automation/marriott-registration/cli.js test-email"
+    "start": "node apps/cli/index.js run",
+    "run": "node apps/cli/index.js run",
+    "dry-run": "node apps/cli/index.js run --dry-run --input data/stays.example.json --site-config config/site.example.json",
+    "validate-config": "node apps/cli/index.js validate-config --site-config config/site.example.json",
+    "email-api-test": "node --check src/infra/email/ryyasia-api-client.js && node --check src/infra/email/ryyasia-api-email-service.js && node --check src/email/index.js",
+    "ryy-asia-test": "node --check src/email/ryyasia/ryyasia-client.js && node --check src/email/ryyasia/ryyasia-service.js && node --check src/email/ryyasia/index.js && node --check src/email/ryyasia/example-usage.js"
   },
   "keywords": [
     "marriott",
@@ -32,8 +27,6 @@
     "csv-parse": "^5.5.6",
     "csv-stringify": "^6.7.0",
     "dotenv": "^16.4.5",
-    "imap": "^0.8.19",
-    "mailparser": "^3.9.6",
     "pako": "^2.1.0",
     "pdf-lib": "^1.17.1",
     "pdf-parse": "^1.1.1",

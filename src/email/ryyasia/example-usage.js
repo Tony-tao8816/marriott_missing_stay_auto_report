@@ -3,8 +3,7 @@
  * 
  * 流程：
  * 1. 创建邮箱账号
- * 2. 等待邮件
- * 3. 提取验证码
+ * 2. 查询邮件列表
  */
 
 const { RyyAsiaService } = require('./index');
@@ -34,22 +33,15 @@ async function main() {
     const mailbox = await service.createMailbox(username, password);
     console.log('创建成功:', mailbox);
 
-    // 2. 等待并获取验证码
-    console.log('等待万豪验证码邮件...');
-    const result = await service.getVerificationCode({
+    // 2. 查询邮件列表
+    console.log('查询邮箱中的邮件...');
+    const emails = await service.listEmails({
       email: mailbox.email,
-      from: 'marriott',  // 过滤发件人
-      subject: 'verification',  // 过滤主题
-      timeoutMs: 60000,  // 轮询 60 秒
-      pollIntervalMs: 5000  // 每 5 秒检查一次
+      size: 10
     });
 
-    if (result) {
-      console.log(`验证码: ${result.code}`);
-      console.log(`匹配规则: ${result.matchedBy}`);
-    } else {
-      console.log('未找到验证码');
-    }
+    console.log(`邮件数量: ${emails.length}`);
+    console.log('最新邮件:', emails[0] || null);
 
   } catch (error) {
     console.error('错误:', error.message);
