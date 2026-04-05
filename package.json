@@ -31,6 +31,10 @@
       {
         "from": "src/pdf/sanitize-visible-text.swift",
         "to": "swift/sanitize-visible-text.swift"
+      },
+      {
+        "from": "src/pdf/extract-visible-text.swift",
+        "to": "swift/extract-visible-text.swift"
       }
     ],
     "mac": {

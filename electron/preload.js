@@ -7,5 +7,6 @@ contextBridge.exposeInMainWorld('desktopApi', {
   processPdf: (payload) => ipcRenderer.invoke('workflow:processPdf', payload),
   registerEmail: (payload) => ipcRenderer.invoke('workflow:registerEmail', payload),
   openPath: (targetPath) => ipcRenderer.invoke('shell:openPath', targetPath),
-  readExtraction: (workspacePath) => ipcRenderer.invoke('workspace:readExtraction', workspacePath)
+  readExtraction: (workspacePath) => ipcRenderer.invoke('workspace:readExtraction', workspacePath),
+  readVisibleText: (workspacePath) => ipcRenderer.invoke('workspace:readVisibleText', workspacePath)
 });

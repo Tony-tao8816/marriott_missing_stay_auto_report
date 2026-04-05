@@ -1,4 +1,5 @@
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 
@@ -6,6 +7,7 @@ function extractPdfData(pdfPath) {
   const buffer = fs.readFileSync(pdfPath);
   const binaryText = buffer.toString('latin1');
   const rawStrings = extractStrings(pdfPath);
+  const visibleText = extractVisibleText(pdfPath);
   const payloads = extractTextPayloads(rawStrings.lines);
   const metadata = extractMetadata(binaryText);
   const hiddenBlocks = extractHiddenBlocks(payloads);
@@ -27,6 +29,7 @@ function extractPdfData(pdfPath) {
     pdfPath,
     metadata,
     rawStrings: rawStrings.text,
+    visibleText,
     hiddenData: {
       taggedFields,
       paramData,
@@ -42,6 +45,46 @@ function extractPdfData(pdfPath) {
     }),
     summary
   };
+}
+
+function extractVisibleText(pdfPath) {
+  const scriptPath = resolveVisibleTextScriptPath();
+  if (!fs.existsSync(scriptPath)) {
+    return {
+      fields: {},
+      entries: [],
+      fullText: '',
+      pages: []
+    };
+  }
+
+  try {
+    const tempDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'marriott-visible-text-'));
+    const moduleCachePath = path.join(tempDirectory, 'swift-module-cache');
+    fs.mkdirSync(moduleCachePath, { recursive: true });
+
+    const output = execFileSync('swift', [scriptPath, pdfPath], {
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        SWIFT_MODULECACHE_PATH: moduleCachePath,
+        CLANG_MODULE_CACHE_PATH: moduleCachePath
+      },
+      maxBuffer: 16 * 1024 * 1024
+    });
+    const parsed = JSON.parse(output);
+    return normalizeVisibleText({
+      fullText: parsed.fullText || '',
+      pages: Array.isArray(parsed.pages) ? parsed.pages : []
+    });
+  } catch (_error) {
+    return {
+      fields: {},
+      entries: [],
+      fullText: '',
+      pages: []
+    };
+  }
 }
 
 function extractStrings(pdfPath) {
@@ -87,6 +130,171 @@ function extractPdfMetadataValue(binaryText, key) {
   const pattern = new RegExp(`\\/${key} \\(([^)]*)\\)`);
   const match = binaryText.match(pattern);
   return match ? match[1] : null;
+}
+
+function resolveVisibleTextScriptPath() {
+  const candidates = [
+    path.join(__dirname, 'extract-visible-text.swift')
+  ];
+
+  if (process.resourcesPath) {
+    candidates.push(path.join(process.resourcesPath, 'swift', 'extract-visible-text.swift'));
+  }
+
+  return candidates.find((candidate) => fs.existsSync(candidate))
+    || path.join(__dirname, 'extract-visible-text.swift');
+}
+
+function normalizeVisibleText({ fullText, pages }) {
+  const lines = buildVisibleLines(fullText);
+  const { fields, entries } = parseVisibleFields(lines);
+
+  return {
+    fields,
+    entries,
+    fullText,
+    pages
+  };
+}
+
+function buildVisibleLines(fullText) {
+  return String(fullText || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function parseVisibleFields(lines) {
+  const fields = {};
+  const entries = [];
+  const seenKeys = new Set();
+
+  const fieldSpecs = [
+    { key: 'guestName', labels: ['Guest Name', '姓名'] },
+    { key: 'roomNumber', labels: ['Room No.', '房号'], inlinePattern: /^Room No\.\s*(.+)$/i },
+    { key: 'address', labels: ['Address', '地址'] },
+    { key: 'arrivalDate', labels: ['Arrival', '入住日期'] },
+    { key: 'departureDate', labels: ['Departure', '离店日期'] },
+    { key: 'loyaltyNumber', labels: ['Loyalty Number', '会员号码'] },
+    { key: 'page', labels: ['Page', '页数'] },
+    { key: 'confirmationNumber', labels: ['Confirmation No.', '确认号'], inlinePattern: /^Confirmation No\.\s*(.+)$/i },
+    { key: 'folioNumber', labels: ['Folio No.', '账单号'], inlinePattern: /^Folio No\.\s*(.+)$/i },
+    { key: 'balance', labels: ['Balance', '余额'], inlinePattern: /^Balance\s+(.+)$/i },
+    {
+      key: 'invoicePrintedAt',
+      labels: ['INFORMATION INVOICE PRINTED ON'],
+      inlinePattern: /^INFORMATION INVOICE PRINTED ON\s+(.+)$/i
+    }
+  ];
+
+  const knownLabelSet = new Set(fieldSpecs.flatMap((spec) => spec.labels));
+
+  for (const spec of fieldSpecs) {
+    const value = readFieldValue(lines, spec, knownLabelSet, fieldSpecs);
+    if (value !== null && value !== undefined && value !== '') {
+      fields[spec.key] = value;
+      entries.push({
+        key: spec.key,
+        label: spec.labels[0],
+        value
+      });
+      seenKeys.add(spec.key);
+    }
+  }
+
+  const hotelLine = lines.find((line) => line.startsWith('Thank you for staying at '));
+  if (hotelLine && !seenKeys.has('hotelStatement')) {
+    fields.hotelStatement = hotelLine;
+    entries.push({
+      key: 'hotelStatement',
+      label: 'Thank you message',
+      value: hotelLine
+    });
+  }
+
+  const hotelNameLine = lines.find((line) => /Ritz-Carlton Reserve|Marriott|Rissai Valley/i.test(line));
+  if (hotelNameLine && !seenKeys.has('hotelNameLine')) {
+    fields.hotelNameLine = hotelNameLine;
+    entries.push({
+      key: 'hotelNameLine',
+      label: 'Hotel name line',
+      value: hotelNameLine
+    });
+  }
+
+  return { fields, entries };
+}
+
+function readFieldValue(lines, spec, knownLabelSet, fieldSpecs) {
+  if (spec.inlinePattern) {
+    const inlineLine = lines.find((line) => spec.inlinePattern.test(line));
+    if (inlineLine) {
+      const match = inlineLine.match(spec.inlinePattern);
+      const inlineValue = match?.[1]?.trim();
+      if (inlineValue && !shouldSkipVisibleValueCandidate(inlineValue, knownLabelSet, fieldSpecs)) {
+        return inlineValue;
+      }
+    }
+  }
+
+  const labelIndex = lines.findIndex((line) => spec.labels.includes(line));
+  if (labelIndex === -1) {
+    return null;
+  }
+
+  for (let index = labelIndex + 1; index < lines.length; index += 1) {
+    const candidate = lines[index];
+    if (!candidate || candidate === ':' || spec.labels.includes(candidate)) {
+      continue;
+    }
+
+    if (knownLabelSet.has(candidate)) {
+      break;
+    }
+
+    if (candidate === '：') {
+      continue;
+    }
+
+    if (shouldSkipVisibleValueCandidate(candidate, knownLabelSet, fieldSpecs)) {
+      continue;
+    }
+
+    return candidate;
+  }
+
+  return null;
+}
+
+function shouldSkipVisibleValueCandidate(candidate, knownLabelSet, fieldSpecs) {
+  if (!candidate) {
+    return true;
+  }
+
+  const trimmed = candidate.trim();
+  if (!trimmed || trimmed === ':' || trimmed === '：') {
+    return true;
+  }
+
+  if (knownLabelSet.has(trimmed)) {
+    return true;
+  }
+
+  if (
+    trimmed.startsWith('$Param') ||
+    trimmed.startsWith('$Folio') ||
+    trimmed.startsWith('~{[') ||
+    trimmed.startsWith('~~{[') ||
+    trimmed.startsWith('{"')
+  ) {
+    return true;
+  }
+
+  if (fieldSpecs.some((spec) => spec.inlinePattern && spec.inlinePattern.test(trimmed))) {
+    return true;
+  }
+
+  return false;
 }
 
 function extractHiddenBlocks(payloads) {

@@ -115,6 +115,16 @@ function registerHandlers() {
       return null;
     }
   });
+
+  ipcMain.handle('workspace:readVisibleText', async (_event, workspacePath) => {
+    try {
+      const visibleTextPath = path.join(workspacePath, 'origin', 'visible-text.json');
+      const content = await fs.promises.readFile(visibleTextPath, 'utf8');
+      return JSON.parse(content);
+    } catch (_error) {
+      return null;
+    }
+  });
 }
 
 function serializeError(error) {

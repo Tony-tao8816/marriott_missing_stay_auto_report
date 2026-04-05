@@ -186,6 +186,18 @@ button {
   overflow: hidden;
 }
 
+.detail-block {
+  margin-top: 18px;
+}
+
+.detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
 pre {
   margin: 0;
   padding: 18px;

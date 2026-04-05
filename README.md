@@ -62,7 +62,8 @@ npm run build:mac
 │   ├── hidden-data.csv
 │   ├── pdf-metadata.json
 │   ├── line-items.csv
-│   └── raw-strings.txt
+│   ├── raw-strings.txt
+│   └── visible-text.json
 ├── email/
     ├── email-account.json
     ├── email-account.csv
@@ -78,5 +79,6 @@ npm run build:mac
     ├── hidden-data.csv
     ├── pdf-metadata.json
     ├── line-items.csv
-    └── raw-strings.txt
+    ├── raw-strings.txt
+    └── visible-text.json
 ```

@@ -91,12 +91,14 @@ async function writeExtractionArtifacts({ directory, extraction, sourcePdfPath, 
   const metadataJsonPath = path.join(directory, 'pdf-metadata.json');
   const lineItemsCsvPath = path.join(directory, 'line-items.csv');
   const rawStringsPath = path.join(directory, 'raw-strings.txt');
+  const visibleTextPath = path.join(directory, 'visible-text.json');
 
   const extractedJson = {
     sourcePdfPath,
     counterpartPdfPath,
     summary: extraction.summary,
     metadata: extraction.metadata,
+    visibleText: extraction.visibleText,
     hiddenData: extraction.hiddenData,
     lineItems: extraction.lineItems
   };
@@ -105,6 +107,7 @@ async function writeExtractionArtifacts({ directory, extraction, sourcePdfPath, 
   await fs.promises.writeFile(hiddenJsonPath, JSON.stringify(extraction.hiddenData, null, 2));
   await fs.promises.writeFile(metadataJsonPath, JSON.stringify(extraction.metadata, null, 2));
   await fs.promises.writeFile(rawStringsPath, extraction.rawStrings);
+  await fs.promises.writeFile(visibleTextPath, JSON.stringify(extraction.visibleText, null, 2));
 
   const extractedCsv = stringifyCsv([
     {
@@ -125,6 +128,8 @@ async function writeExtractionArtifacts({ directory, extraction, sourcePdfPath, 
       guestNumber: extraction.summary.identifiers.guestNumber,
       reservationNumber: extraction.summary.identifiers.reservationNumber,
       profileNumber: extraction.summary.identifiers.profileNumber,
+      visiblePageCount: extraction.visibleText.pages.length,
+      visibleTextLength: extraction.visibleText.fullText.length,
       creator: extraction.metadata.creator,
       producer: extraction.metadata.producer,
       title: extraction.metadata.title,
@@ -147,7 +152,8 @@ async function writeExtractionArtifacts({ directory, extraction, sourcePdfPath, 
     hiddenCsvPath,
     metadataJsonPath,
     lineItemsCsvPath,
-    rawStringsPath
+    rawStringsPath,
+    visibleTextPath
   };
 }
 

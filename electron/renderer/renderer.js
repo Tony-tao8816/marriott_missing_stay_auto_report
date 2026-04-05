@@ -6,6 +6,7 @@ const state = {
 const processForm = document.querySelector('#process-form');
 const emailForm = document.querySelector('#email-form');
 const processResult = document.querySelector('#process-result');
+const processExtraction = document.querySelector('#process-extraction');
 const emailResult = document.querySelector('#email-result');
 const mailboxPreview = document.querySelector('#mailbox-preview');
 const workspaceInput = document.querySelector('#email-workspace-path');
@@ -59,6 +60,7 @@ processForm.addEventListener('submit', async (event) => {
   };
 
   processResult.textContent = '正在处理 PDF，请稍候...';
+  processExtraction.textContent = '正在读取并整理页面提取 PDF 信息...';
 
   try {
     const result = await window.desktopApi.processPdf(payload);
@@ -67,8 +69,10 @@ processForm.addEventListener('submit', async (event) => {
     state.emailWorkspace = result.workspaceDirectory || '';
     updateMailboxPreview();
     processResult.textContent = JSON.stringify(result, null, 2);
+    await updateProcessExtraction(result.workspaceDirectory);
   } catch (error) {
     processResult.textContent = formatError(error);
+    processExtraction.textContent = '未能读取提取信息。';
   }
 });
 
@@ -103,6 +107,21 @@ function formatError(error) {
   }
 
   return `执行失败: ${String(error)}`;
+}
+
+async function updateProcessExtraction(workspacePath) {
+  if (!workspacePath) {
+    processExtraction.textContent = '未找到工作目录。';
+    return;
+  }
+
+  const visibleText = await window.desktopApi.readVisibleText(workspacePath);
+  if (!visibleText) {
+    processExtraction.textContent = '未找到 origin/visible-text.json。';
+    return;
+  }
+
+  processExtraction.textContent = JSON.stringify(visibleText, null, 2);
 }
 
 async function updateMailboxPreview() {
