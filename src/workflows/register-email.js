@@ -8,6 +8,7 @@ const {
   loadExtractionFromWorkspace,
   writeEmailArtifacts
 } = require('../storage/workspace');
+const { persistWorkflowRecord } = require('../storage/local-database');
 
 async function registerEmailWorkflow({
   pdfPath,
@@ -125,12 +126,19 @@ async function registerEmailWorkflow({
     messagePreview
   });
 
+  const databaseRecord = await persistWorkflowRecord({
+    workspace,
+    extraction,
+    mailboxEmail
+  });
+
   return {
     status: 'ok',
     workspaceDirectory: workspace.directory,
     mailboxEmail,
     created,
-    artifacts: artifactPaths
+    artifacts: artifactPaths,
+    database: databaseRecord
   };
 }
 

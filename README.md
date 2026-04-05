@@ -10,6 +10,7 @@
 - 产物按 `origin/` 和 `modify/` 分开保存
 - 基于 PDF 解析出的姓名注册 Cloud Mail 邮箱
 - 使用新邮箱给 `tony.stig@icloud.com` 发送通知邮件
+- 邮箱注册成功后，把核心字段写入本地 SQLite 数据库
 
 ## 用法
 
@@ -49,6 +50,52 @@ npm run build:mac
 - `--mail-admin-password <password>`: Cloud Mail 管理员密码
 - `--mail-domain <domain>`: 要创建的新邮箱域名，默认 `ryy.asia`
 - `--notify-recipient <email>`: 新邮箱注册完成后的通知收件人，默认 `tony.stig@icloud.com`
+
+## 本地数据库
+
+邮箱注册成功后，会把以下字段写入本地 SQLite：
+
+- `firstName`
+- `lastName`
+- `hotel`
+- `total`
+- `arrivalDate`
+- `departureDate`
+- `roomNumber`
+- `confirmationNumber`
+- `mailboxEmail`
+- `phone`
+- `zipcode`
+- `psw`
+
+数据库文件位置：
+
+- `~/Documents/marriott_missing_stay_auto_report/marriott_folio.sqlite`
+
+数据表：
+
+- `workflow_records`
+
+`psw` 生成规则：
+
+- `大写(last name 首字母) + 小写(first name 首字母) + @marriott`
+- 例如：`Li / Man Jia -> Lm@marriott`
+
+`phone` 生成规则：
+
+- 随机 8 位数字字符串
+
+`zipcode` 生成规则：
+
+- 随机取一个加州真实 ZIP Code
+
+`hotel` 规则：
+
+- 固定值：`Rissai Valley, a Ritz-Carlton Reserve`
+
+`total` 规则：
+
+- 取 PDF 提取结果里的金额字段，当前来源是 `balanceAmount`
 
 ## 输出结构
 

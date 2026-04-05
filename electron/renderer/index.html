@@ -12,11 +12,16 @@
         <p class="eyebrow">Mac Test Console</p>
         <h1>Marriott Folio Workflow</h1>
         <p class="subtitle">
-          先通过图形界面测试现有两步流程：PDF 解析去敏，以及邮箱注册与通知发送。
+          先通过图形界面测试现有两步流程：PDF 解析去敏、邮箱注册与通知发送，以及本地数据库查看。
         </p>
       </header>
 
-      <main class="grid">
+      <nav class="tab-bar">
+        <button class="tab-button is-active" type="button" data-view-target="workflow-view">工作流</button>
+        <button class="tab-button" type="button" data-view-target="database-view">数据库</button>
+      </nav>
+
+      <main id="workflow-view" class="grid app-view is-active">
         <section class="panel">
           <div class="panel-head">
             <div>
@@ -44,7 +49,10 @@
             </label>
 
             <div class="action-row">
-              <button class="primary-button" type="submit">开始处理 PDF</button>
+              <button id="process-submit" class="primary-button" type="submit">
+                <span class="button-label">开始处理 PDF</span>
+                <span class="button-spinner" aria-hidden="true"></span>
+              </button>
             </div>
           </form>
 
@@ -115,12 +123,80 @@
             </div>
 
             <div class="action-row">
-              <button class="primary-button" type="submit">注册邮箱并发送通知</button>
+              <button id="email-submit" class="primary-button" type="submit">
+                <span class="button-label">注册邮箱并发送通知</span>
+                <span class="button-spinner" aria-hidden="true"></span>
+              </button>
             </div>
           </form>
 
           <div class="result-box">
             <pre id="email-result">还没有运行。</pre>
+          </div>
+        </section>
+      </main>
+
+      <main id="database-view" class="app-view">
+        <section class="panel database-panel">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">Step 3</p>
+              <h2>查看本地数据库</h2>
+            </div>
+            <button id="open-database-path" class="ghost-button" type="button">打开数据库位置</button>
+          </div>
+
+          <form id="database-form" class="form-stack">
+            <label class="field">
+              <span>数据库文件</span>
+              <div class="picker-row">
+                <input id="database-path" name="databasePath" type="text" placeholder="~/Documents/marriott_missing_stay_auto_report/marriott_folio.sqlite" />
+                <button id="pick-database-path" type="button">选择数据库</button>
+              </div>
+            </label>
+
+            <div class="action-row">
+              <button id="database-submit" class="primary-button" type="submit">
+                <span class="button-label">刷新数据库数据</span>
+                <span class="button-spinner" aria-hidden="true"></span>
+              </button>
+            </div>
+          </form>
+
+          <div class="result-box">
+            <pre id="database-result">还没有运行。</pre>
+          </div>
+
+          <div class="detail-block">
+            <div class="detail-head">
+              <span>数据库记录</span>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>firstName</th>
+                    <th>lastName</th>
+                    <th>hotel</th>
+                    <th>total</th>
+                    <th>arrivalDate</th>
+                    <th>departureDate</th>
+                    <th>roomNumber</th>
+                    <th>confirmationNumber</th>
+                    <th>mailboxEmail</th>
+                    <th>phone</th>
+                    <th>zipcode</th>
+                    <th>psw</th>
+                    <th>updatedAt</th>
+                  </tr>
+                </thead>
+                <tbody id="database-table-body">
+                  <tr>
+                    <td colspan="13" class="table-empty">暂无数据</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
       </main>

@@ -3,6 +3,7 @@ const fs = require('node:fs');
 const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
 const { processPdfWorkflow } = require('../src/workflows/process-pdf');
 const { registerEmailWorkflow } = require('../src/workflows/register-email');
+const { DATABASE_FILE_NAME, readWorkflowRecords, updateWorkflowRecord } = require('../src/storage/local-database');
 
 function createWindow() {
   const window = new BrowserWindow({
@@ -70,6 +71,19 @@ function registerHandlers() {
     return result.canceled ? null : result.filePaths[0];
   });
 
+  ipcMain.handle('dialog:pickDatabase', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Select Local Database',
+      properties: ['openFile'],
+      filters: [
+        { name: 'SQLite Database', extensions: ['sqlite', 'db'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+
+    return result.canceled ? null : result.filePaths[0];
+  });
+
   ipcMain.handle('workflow:processPdf', async (_event, payload) => {
     try {
       return await processPdfWorkflow({
@@ -104,6 +118,33 @@ function registerHandlers() {
     }
 
     return shell.openPath(targetPath);
+  });
+
+  ipcMain.handle('database:getDefaultPath', async () => {
+    return path.join(app.getPath('documents'), 'marriott_missing_stay_auto_report', DATABASE_FILE_NAME);
+  });
+
+  ipcMain.handle('database:readRecords', async (_event, databasePath) => {
+    try {
+      const resolvedPath = databasePath || path.join(app.getPath('documents'), 'marriott_missing_stay_auto_report', DATABASE_FILE_NAME);
+      return await readWorkflowRecords(resolvedPath);
+    } catch (error) {
+      throw serializeError(error);
+    }
+  });
+
+  ipcMain.handle('database:updateRecord', async (_event, payload) => {
+    try {
+      const resolvedPath = payload?.databasePath || path.join(app.getPath('documents'), 'marriott_missing_stay_auto_report', DATABASE_FILE_NAME);
+      return await updateWorkflowRecord(
+        resolvedPath,
+        payload?.workspaceDirectory,
+        payload?.field,
+        payload?.value ?? ''
+      );
+    } catch (error) {
+      throw serializeError(error);
+    }
   });
 
   ipcMain.handle('workspace:readExtraction', async (_event, workspacePath) => {
