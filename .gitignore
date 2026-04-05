@@ -1,7 +1,4 @@
 node_modules/
-.env
-config/site.json
+.DS_Store
 output/
-playwright-report/
-test-results/
-*.log
+dist/

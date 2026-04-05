@@ -1,44 +1,49 @@
 {
-  "name": "marriott-missing-stay-auto-report",
-  "version": "1.0.0",
-  "description": "CLI tool for automating Marriott missing stay requests with Node.js and Playwright.",
-  "main": "apps/cli/index.js",
+  "name": "marriott-folio-workflow",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PDF extraction and sanitization workflow for Marriott folio processing.",
+  "type": "commonjs",
+  "main": "electron/main.js",
   "bin": {
-    "marriott-missing-stay": "./apps/cli/index.js",
-    "opencli": "./apps/cli/index.js"
+    "marriott-folio": "./apps/cli/index.js"
   },
   "scripts": {
-    "start": "node apps/cli/index.js run",
-    "run": "node apps/cli/index.js run",
-    "dry-run": "node apps/cli/index.js run --dry-run --input data/stays.example.json --site-config config/site.example.json",
-    "validate-config": "node apps/cli/index.js validate-config --site-config config/site.example.json",
-    "email-api-test": "node --check src/infra/email/ryyasia-api-client.js && node --check src/infra/email/ryyasia-api-email-service.js && node --check src/email/index.js",
-    "ryy-asia-test": "node --check src/email/ryyasia/ryyasia-client.js && node --check src/email/ryyasia/ryyasia-service.js && node --check src/email/ryyasia/index.js && node --check src/email/ryyasia/example-usage.js"
+    "cli": "node apps/cli/index.js",
+    "desktop": "electron .",
+    "build:mac": "electron-builder --mac dir"
   },
-  "keywords": [
-    "marriott",
-    "playwright",
-    "automation",
-    "missing-stay"
-  ],
-  "dependencies": {
-    "axios": "^1.14.0",
-    "commander": "^12.1.0",
-    "csv-parse": "^5.5.6",
-    "csv-stringify": "^6.7.0",
-    "dotenv": "^16.4.5",
-    "pako": "^2.1.0",
-    "pdf-lib": "^1.17.1",
-    "pdf-parse": "^1.1.1",
-    "pino": "^9.5.0",
-    "playwright": "^1.48.2",
-    "xlsx": "^0.18.5",
-    "zod": "^3.23.8"
-  },
-  "author": "",
-  "license": "MIT",
-  "type": "commonjs",
   "engines": {
     "node": ">=20"
+  },
+  "build": {
+    "appId": "asia.ryy.marriottfolio",
+    "productName": "Marriott Folio Workflow",
+    "files": [
+      "apps/**/*",
+      "src/**/*",
+      "electron/**/*",
+      "package.json",
+      "README.md"
+    ],
+    "asar": true,
+    "extraResources": [
+      {
+        "from": "src/pdf/sanitize-visible-text.swift",
+        "to": "swift/sanitize-visible-text.swift"
+      }
+    ],
+    "mac": {
+      "target": [
+        "dir"
+      ],
+      "category": "public.app-category.utilities",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    }
+  },
+  "devDependencies": {
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12"
   }
 }

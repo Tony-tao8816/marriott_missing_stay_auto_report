@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Marriott Folio Workflow</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="hero">
+        <p class="eyebrow">Mac Test Console</p>
+        <h1>Marriott Folio Workflow</h1>
+        <p class="subtitle">
+          先通过图形界面测试现有两步流程：PDF 解析去敏，以及邮箱注册与通知发送。
+        </p>
+      </header>
+
+      <main class="grid">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">Step 1</p>
+              <h2>处理 PDF</h2>
+            </div>
+            <button id="open-process-workspace" class="ghost-button" type="button">打开结果目录</button>
+          </div>
+
+          <form id="process-form" class="form-stack">
+            <label class="field">
+              <span>PDF 文件</span>
+              <div class="picker-row">
+                <input id="process-pdf-path" name="pdfPath" type="text" placeholder="/path/to/file.pdf" />
+                <button id="pick-process-pdf" type="button">选择 PDF</button>
+              </div>
+            </label>
+
+            <label class="field">
+              <span>输出根目录</span>
+              <div class="picker-row">
+                <input id="process-output-root" name="outputRoot" type="text" placeholder="默认使用 ~/Documents/marriott_missing_stay_auto_report" />
+                <button id="pick-process-output-root" type="button">选择目录</button>
+              </div>
+            </label>
+
+            <div class="action-row">
+              <button class="primary-button" type="submit">开始处理 PDF</button>
+            </div>
+          </form>
+
+          <div class="result-box">
+            <pre id="process-result">还没有运行。</pre>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">Step 2</p>
+              <h2>注册邮箱并发送通知</h2>
+            </div>
+            <button id="open-email-workspace" class="ghost-button" type="button">打开结果目录</button>
+          </div>
+
+          <form id="email-form" class="form-stack">
+            <label class="field">
+              <span>姓名资料夹</span>
+              <div class="picker-row">
+                <input id="email-workspace-path" name="workspacePath" type="text" placeholder="/Users/.../Documents/marriott_missing_stay_auto_report/Xia_Zhi Ying" />
+                <button id="pick-email-workspace" type="button">选择资料夹</button>
+              </div>
+            </label>
+
+            <label class="field">
+              <span>Cloud Mail API 地址</span>
+              <input id="mail-api-base-url" name="mailApiBaseUrl" type="text" value="https://mail.ryy.asia" placeholder="https://mail.example.com" />
+            </label>
+
+            <div class="two-col">
+              <label class="field">
+                <span>管理员邮箱</span>
+                <input id="mail-admin-email" name="mailAdminEmail" type="email" value="admin@ryy.asia" />
+              </label>
+
+              <label class="field">
+                <span>管理员密码</span>
+                <input id="mail-admin-password" name="mailAdminPassword" type="password" value="Txl@88457" />
+              </label>
+            </div>
+
+            <div class="two-col">
+              <label class="field">
+                <span>新邮箱域名</span>
+                <input id="mail-domain" name="mailDomain" type="text" value="ryy.asia" />
+              </label>
+
+              <label class="field">
+                <span>通知收件人</span>
+                <input id="notify-recipient" name="notifyRecipient" type="email" value="tony.stig@icloud.com" />
+              </label>
+            </div>
+
+            <div class="preview-strip">
+              <span>即将创建的邮箱</span>
+              <strong id="mailbox-preview">未生成</strong>
+            </div>
+
+            <div class="action-row">
+              <button class="primary-button" type="submit">注册邮箱并发送通知</button>
+            </div>
+          </form>
+
+          <div class="result-box">
+            <pre id="email-result">还没有运行。</pre>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./renderer.js"></script>
+  </body>
+</html>
