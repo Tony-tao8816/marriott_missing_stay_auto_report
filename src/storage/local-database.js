@@ -5,7 +5,7 @@ const { promisify } = require('node:util');
 const execFileAsync = promisify(execFile);
 
 const DATABASE_FILE_NAME = 'marriott_folio.sqlite';
-const DEFAULT_HOTEL = 'Rissai Valley, a Ritz-Carlton Reserve';
+const DEFAULT_HOTEL = 'Rissai Valley, a Ritz-Carlton Reserve, China, Jiuzhaigou';
 
 async function persistWorkflowRecord({ workspace, extraction, mailboxEmail }) {
   const databasePath = path.join(workspace.root, DATABASE_FILE_NAME);
@@ -30,6 +30,7 @@ SELECT
   workspace_directory,
   first_name,
   last_name,
+  member_number,
   hotel,
   total,
   arrival_date,
@@ -92,6 +93,27 @@ WHERE workspace_directory = ${sqlLiteral(workspaceDirectory)};
   };
 }
 
+async function importWorkflowJson(databasePath, input) {
+  await ensureSchema(databasePath);
+
+  const items = Array.isArray(input) ? input : [input];
+  const importedRecords = [];
+
+  for (const item of items) {
+    const record = await buildImportedWorkflowRecord(databasePath, item);
+    const sql = buildUpsertSql(record);
+    await execSqlite(databasePath, sql);
+    importedRecords.push(record);
+  }
+
+  return {
+    databasePath,
+    table: 'workflow_records',
+    count: importedRecords.length,
+    records: importedRecords
+  };
+}
+
 function buildWorkflowRecord({ workspace, extraction, mailboxEmail, existingRecord }) {
   const firstName = extraction.summary.guest.firstName || '';
   const lastName = extraction.summary.guest.lastName || '';
@@ -100,6 +122,7 @@ function buildWorkflowRecord({ workspace, extraction, mailboxEmail, existingReco
     workspaceDirectory: workspace.directory,
     firstName,
     lastName,
+    memberNumber: existingRecord?.memberNumber || '',
     hotel: DEFAULT_HOTEL,
     total: extraction.summary.stay.balanceAmount || '',
     arrivalDate: extraction.summary.stay.checkInDate || '',
@@ -116,9 +139,38 @@ function buildWorkflowRecord({ workspace, extraction, mailboxEmail, existingReco
   };
 }
 
+async function buildImportedWorkflowRecord(databasePath, input) {
+  const item = normalizeImportItem(input);
+  const firstName = item.firstName;
+  const lastName = item.lastName;
+  const workspaceDirectory = item.workspaceDirectory || buildImportedWorkspaceDirectory(databasePath, firstName, lastName);
+  const existingRecord = await readWorkflowRecordByWorkspace(databasePath, workspaceDirectory);
+
+  return {
+    workspaceDirectory,
+    firstName: firstName || existingRecord?.firstName || '',
+    lastName: lastName || existingRecord?.lastName || '',
+    memberNumber: item.memberNumber || existingRecord?.memberNumber || '',
+    hotel: item.hotel || existingRecord?.hotel || DEFAULT_HOTEL,
+    total: item.total || existingRecord?.total || '',
+    arrivalDate: item.arrivalDate || existingRecord?.arrivalDate || '',
+    departureDate: item.departureDate || existingRecord?.departureDate || '',
+    roomNumber: item.roomNumber || existingRecord?.roomNumber || '',
+    confirmationNumber: normalizeConfirmationNumber(
+      item.confirmationNumber || existingRecord?.confirmationNumber || ''
+    ),
+    mailboxEmail: item.mailboxEmail || existingRecord?.mailboxEmail || '',
+    psw: item.psw || existingRecord?.psw || buildPsw(firstName, lastName),
+    phone: item.phone || existingRecord?.phone || buildPhone(),
+    zipcode: item.zipcode || existingRecord?.zipcode || buildCaliforniaZipcode(),
+    updatedAt: new Date().toISOString()
+  };
+}
+
 const FIELD_TO_COLUMN = {
   firstName: 'first_name',
   lastName: 'last_name',
+  memberNumber: 'member_number',
   hotel: 'hotel',
   total: 'total',
   arrivalDate: 'arrival_date',
@@ -139,11 +191,43 @@ function normalizeDatabaseFieldValue(field, value) {
   return String(value ?? '').trim();
 }
 
+function normalizeImportItem(input) {
+  const item = input && typeof input === 'object' ? input : {};
+
+  return {
+    workspaceDirectory: readImportField(item, ['workspaceDirectory', 'workspace_directory']),
+    firstName: readImportField(item, ['firstName', 'first_name']),
+    lastName: readImportField(item, ['lastName', 'last_name']),
+    memberNumber: readImportField(item, ['memberNumber', 'member_number']),
+    hotel: readImportField(item, ['hotel']),
+    total: readImportField(item, ['total']),
+    arrivalDate: readImportField(item, ['arrivalDate', 'arrival_date']),
+    departureDate: readImportField(item, ['departureDate', 'departure_date']),
+    roomNumber: readImportField(item, ['roomNumber', 'room_number']),
+    confirmationNumber: readImportField(item, ['confirmationNumber', 'confirmation_number']),
+    mailboxEmail: readImportField(item, ['mailboxEmail', 'mailbox_email']),
+    psw: readImportField(item, ['psw']),
+    phone: readImportField(item, ['phone']),
+    zipcode: readImportField(item, ['zipcode'])
+  };
+}
+
+function readImportField(input, keys) {
+  for (const key of keys) {
+    if (Object.prototype.hasOwnProperty.call(input, key)) {
+      return String(input[key] ?? '').trim();
+    }
+  }
+
+  return '';
+}
+
 function buildUpsertSql(record) {
   const values = {
     workspaceDirectory: sqlLiteral(record.workspaceDirectory),
     firstName: sqlLiteral(record.firstName),
     lastName: sqlLiteral(record.lastName),
+    memberNumber: sqlLiteral(record.memberNumber),
     hotel: sqlLiteral(record.hotel),
     total: sqlLiteral(record.total),
     arrivalDate: sqlLiteral(record.arrivalDate),
@@ -163,6 +247,7 @@ INSERT INTO workflow_records (
   workspace_directory,
   first_name,
   last_name,
+  member_number,
   hotel,
   total,
   arrival_date,
@@ -178,6 +263,7 @@ INSERT INTO workflow_records (
   ${values.workspaceDirectory},
   ${values.firstName},
   ${values.lastName},
+  ${values.memberNumber},
   ${values.hotel},
   ${values.total},
   ${values.arrivalDate},
@@ -193,6 +279,7 @@ INSERT INTO workflow_records (
 ON CONFLICT(workspace_directory) DO UPDATE SET
   first_name = excluded.first_name,
   last_name = excluded.last_name,
+  member_number = excluded.member_number,
   hotel = excluded.hotel,
   total = excluded.total,
   arrival_date = excluded.arrival_date,
@@ -217,6 +304,7 @@ CREATE TABLE IF NOT EXISTS workflow_records (
   workspace_directory TEXT NOT NULL UNIQUE,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
+  member_number TEXT,
   hotel TEXT,
   total TEXT,
   arrival_date TEXT,
@@ -268,6 +356,13 @@ CREATE TABLE IF NOT EXISTS workflow_records (
       `ALTER TABLE workflow_records ADD COLUMN total TEXT;`
     );
   }
+
+  if (!columns.includes('member_number')) {
+    await execSqlite(
+      databasePath,
+      `ALTER TABLE workflow_records ADD COLUMN member_number TEXT;`
+    );
+  }
 }
 
 async function readWorkflowRecordByWorkspace(databasePath, workspaceDirectory) {
@@ -278,6 +373,7 @@ SELECT
   workspace_directory,
   first_name,
   last_name,
+  member_number,
   hotel,
   total,
   arrival_date,
@@ -324,6 +420,7 @@ function parseWorkflowRecordRow(line) {
     workspaceDirectory = '',
     firstName = '',
     lastName = '',
+    memberNumber = '',
     hotel = '',
     total = '',
     arrivalDate = '',
@@ -341,6 +438,7 @@ function parseWorkflowRecordRow(line) {
     workspaceDirectory,
     firstName,
     lastName,
+    memberNumber,
     hotel,
     total,
     arrivalDate,
@@ -370,6 +468,23 @@ function getVisibleConfirmationNumber(extraction) {
     extraction?.visibleText?.confirmationNumber ||
     ''
   ).trim();
+}
+
+function buildImportedWorkspaceDirectory(databasePath, firstName, lastName) {
+  const rootDirectory = path.dirname(databasePath);
+  const normalizedFirstName = normalizeWorkspaceNamePart(firstName);
+  const normalizedLastName = normalizeWorkspaceNamePart(lastName);
+  const folderName = [normalizedLastName, normalizedFirstName].filter(Boolean).join('_') || `Imported_${Date.now()}`;
+  return path.join(rootDirectory, folderName);
+}
+
+function normalizeWorkspaceNamePart(value) {
+  return String(value || '')
+    .trim()
+    .replace(/[\\/]+/g, '_')
+    .replace(/\s+/g, ' ')
+    .replace(/[<>:"|?*]/g, '')
+    .trim();
 }
 
 function normalizeConfirmationNumber(value) {
@@ -449,7 +564,9 @@ async function execSqlite(databasePath, sql) {
 module.exports = {
   DATABASE_FILE_NAME,
   DEFAULT_HOTEL,
+  importWorkflowJson,
   persistWorkflowRecord,
   readWorkflowRecords,
+  readWorkflowRecordByWorkspace,
   updateWorkflowRecord
 };

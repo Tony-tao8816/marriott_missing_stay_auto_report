@@ -11,10 +11,16 @@ async function createWorkspace({ extraction, sourcePdfPath, outputRoot }) {
   const originDirectory = path.join(directory, 'origin');
   const modifyDirectory = path.join(directory, 'modify');
   const emailDirectory = path.join(directory, 'email');
+  const marriottDirectory = path.join(directory, 'marriott');
+  const missingStayDirectory = path.join(directory, 'missing-stay');
+  const idDirectory = path.join(directory, 'ID');
 
   await fs.promises.mkdir(originDirectory, { recursive: true });
   await fs.promises.mkdir(modifyDirectory, { recursive: true });
   await fs.promises.mkdir(emailDirectory, { recursive: true });
+  await fs.promises.mkdir(marriottDirectory, { recursive: true });
+  await fs.promises.mkdir(missingStayDirectory, { recursive: true });
+  await fs.promises.mkdir(idDirectory, { recursive: true });
   await fs.promises.copyFile(sourcePdfPath, path.join(originDirectory, path.basename(sourcePdfPath)));
 
   return {
@@ -23,6 +29,9 @@ async function createWorkspace({ extraction, sourcePdfPath, outputRoot }) {
     originDirectory,
     modifyDirectory,
     emailDirectory,
+    marriottDirectory,
+    missingStayDirectory,
+    idDirectory,
     firstName,
     lastName
   };
@@ -32,17 +41,26 @@ async function openWorkspace(directory) {
   const originDirectory = path.join(directory, 'origin');
   const modifyDirectory = path.join(directory, 'modify');
   const emailDirectory = path.join(directory, 'email');
+  const marriottDirectory = path.join(directory, 'marriott');
+  const missingStayDirectory = path.join(directory, 'missing-stay');
+  const idDirectory = path.join(directory, 'ID');
 
   await fs.promises.mkdir(originDirectory, { recursive: true });
   await fs.promises.mkdir(modifyDirectory, { recursive: true });
   await fs.promises.mkdir(emailDirectory, { recursive: true });
+  await fs.promises.mkdir(marriottDirectory, { recursive: true });
+  await fs.promises.mkdir(missingStayDirectory, { recursive: true });
+  await fs.promises.mkdir(idDirectory, { recursive: true });
 
   return {
     root: path.dirname(directory),
     directory,
     originDirectory,
     modifyDirectory,
-    emailDirectory
+    emailDirectory,
+    marriottDirectory,
+    missingStayDirectory,
+    idDirectory
   };
 }
 

@@ -8,11 +8,11 @@
   </head>
   <body>
     <div class="app-shell">
-      <header class="hero">
-        <p class="eyebrow">Mac Test Console</p>
-        <h1>Marriott Folio Workflow</h1>
+      <header class="hero hero-apple">
+        <p class="eyebrow">Marriott Folio Workflow</p>
+        <h1>自动化工作流控制台</h1>
         <p class="subtitle">
-          先通过图形界面测试现有两步流程：PDF 解析去敏、邮箱注册与通知发送，以及本地数据库查看。
+          先通过图形界面测试现有四步流程：PDF 解析去敏、邮箱注册与通知发送、万豪会员注册、补登住宿记录，以及本地数据库查看。
         </p>
       </header>
 
@@ -22,7 +22,7 @@
       </nav>
 
       <main id="workflow-view" class="grid app-view is-active">
-        <section class="panel">
+        <section class="panel panel-light">
           <div class="panel-head">
             <div>
               <p class="kicker">Step 1</p>
@@ -53,6 +53,16 @@
                 <span class="button-label">开始处理 PDF</span>
                 <span class="button-spinner" aria-hidden="true"></span>
               </button>
+              <button id="upload-id-submit" class="ghost-button inline-action" type="button" disabled>上传证件</button>
+            </div>
+
+            <div class="preview-strip">
+              <span>证件文件</span>
+              <strong id="id-upload-status">处理完 PDF 后可上传</strong>
+            </div>
+
+            <div id="id-preview-panel" class="id-preview-panel is-empty">
+              <div id="id-upload-preview" class="id-upload-preview">暂无预览</div>
             </div>
           </form>
 
@@ -70,7 +80,7 @@
           </div>
         </section>
 
-        <section class="panel">
+        <section class="panel panel-light">
           <div class="panel-head">
             <div>
               <p class="kicker">Step 2</p>
@@ -119,7 +129,7 @@
 
             <div class="preview-strip">
               <span>即将创建的邮箱</span>
-              <strong id="mailbox-preview">未生成</strong>
+              <input id="mailbox-preview" type="text" value="" placeholder="未生成" />
             </div>
 
             <div class="action-row">
@@ -134,13 +144,133 @@
             <pre id="email-result">还没有运行。</pre>
           </div>
         </section>
-      </main>
 
-      <main id="database-view" class="app-view">
-        <section class="panel database-panel">
+        <section class="panel panel-light">
           <div class="panel-head">
             <div>
               <p class="kicker">Step 3</p>
+              <h2>注册万豪会员</h2>
+            </div>
+            <button id="open-marriott-workspace" class="ghost-button" type="button">打开结果目录</button>
+          </div>
+
+          <form id="marriott-form" class="form-stack">
+            <label class="field">
+              <span>姓名资料夹</span>
+              <div class="picker-row">
+                <input id="marriott-workspace-path" name="workspacePath" type="text" placeholder="/Users/.../Documents/marriott_missing_stay_auto_report/Xia_Zhi Ying" />
+                <button id="pick-marriott-workspace" type="button">选择资料夹</button>
+              </div>
+            </label>
+
+            <div class="two-col">
+              <label class="field">
+                <span>命令</span>
+                <input id="marriott-opencli-command" name="opencliCommand" type="text" value="opencli" />
+              </label>
+
+              <label class="field">
+                <span>国家</span>
+                <input id="marriott-country" name="country" type="text" value="USA" />
+              </label>
+            </div>
+
+            <div class="two-col">
+              <label class="field">
+                <span>Remember Me</span>
+                <input id="marriott-remember-me" name="rememberMe" type="text" value="false" />
+              </label>
+
+              <label class="field">
+                <span>Marketing Emails</span>
+                <input id="marriott-marketing-emails" name="marketingEmails" type="text" value="true" />
+              </label>
+            </div>
+
+            <label class="checkbox-field">
+              <input id="marriott-incognito" name="incognito" type="checkbox" />
+              <span>使用无痕窗口</span>
+            </label>
+
+            <div class="action-row">
+              <button id="marriott-submit" class="primary-button" type="submit">
+                <span class="button-label">注册万豪会员</span>
+                <span class="button-spinner" aria-hidden="true"></span>
+              </button>
+            </div>
+          </form>
+
+          <div class="result-box">
+            <pre id="marriott-result">还没有运行。</pre>
+          </div>
+        </section>
+
+        <section class="panel panel-light">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">Step 4</p>
+              <h2>补登住宿记录</h2>
+            </div>
+            <button id="open-missing-stay-workspace" class="ghost-button" type="button">打开结果目录</button>
+          </div>
+
+          <form id="missing-stay-form" class="form-stack">
+            <label class="field">
+              <span>姓名资料夹</span>
+              <div class="picker-row">
+                <input id="missing-stay-workspace-path" name="workspacePath" type="text" placeholder="/Users/.../Documents/marriott_missing_stay_auto_report/Xia_Zhi Ying" />
+                <button id="pick-missing-stay-workspace" type="button">选择资料夹</button>
+              </div>
+            </label>
+
+            <div class="two-col">
+              <label class="field">
+                <span>命令</span>
+                <input id="missing-stay-opencli-command" name="opencliCommand" type="text" value="opencli" />
+              </label>
+
+              <label class="field">
+                <span>Third Party Booking</span>
+                <input id="missing-stay-third-party-booking" name="thirdPartyBooking" type="text" value="no" />
+              </label>
+            </div>
+
+            <div class="two-col">
+              <label class="field">
+                <span>Bill Copy</span>
+                <input id="missing-stay-bill-copy" name="billCopy" type="text" value="digital" />
+              </label>
+
+              <label class="field">
+                <span>Comments</span>
+                <input id="missing-stay-comments" name="comments" type="text" value="Please credit this stay" />
+              </label>
+            </div>
+
+            <label class="checkbox-field">
+              <input id="missing-stay-incognito" name="incognito" type="checkbox" />
+              <span>使用无痕窗口</span>
+            </label>
+
+            <div class="action-row">
+              <button id="missing-stay-submit" class="primary-button" type="submit">
+                <span class="button-label">补登住宿记录</span>
+                <span class="button-spinner" aria-hidden="true"></span>
+              </button>
+            </div>
+          </form>
+
+          <div class="result-box">
+            <pre id="missing-stay-result">还没有运行。</pre>
+          </div>
+        </section>
+      </main>
+
+      <main id="database-view" class="app-view">
+        <section class="panel panel-light database-panel">
+          <div class="panel-head">
+            <div>
+              <p class="kicker">Step 5</p>
               <h2>查看本地数据库</h2>
             </div>
             <button id="open-database-path" class="ghost-button" type="button">打开数据库位置</button>
@@ -155,17 +285,15 @@
               </div>
             </label>
 
-            <div class="action-row">
+            <div class="action-row action-row-wrap">
               <button id="database-submit" class="primary-button" type="submit">
                 <span class="button-label">刷新数据库数据</span>
                 <span class="button-spinner" aria-hidden="true"></span>
               </button>
+              <button id="open-database-json-modal" class="ghost-button" type="button">导入 JSON</button>
+              <button id="open-database-result-modal" class="ghost-button" type="button">查看原始数据</button>
             </div>
           </form>
-
-          <div class="result-box">
-            <pre id="database-result">还没有运行。</pre>
-          </div>
 
           <div class="detail-block">
             <div class="detail-head">
@@ -177,6 +305,7 @@
                   <tr>
                     <th>firstName</th>
                     <th>lastName</th>
+                    <th>memberNumber</th>
                     <th>hotel</th>
                     <th>total</th>
                     <th>arrivalDate</th>
@@ -192,7 +321,7 @@
                 </thead>
                 <tbody id="database-table-body">
                   <tr>
-                    <td colspan="13" class="table-empty">暂无数据</td>
+                    <td colspan="14" class="table-empty">暂无数据</td>
                   </tr>
                 </tbody>
               </table>
@@ -200,6 +329,46 @@
           </div>
         </section>
       </main>
+    </div>
+
+    <div id="database-json-modal" class="modal-backdrop" hidden>
+      <div class="modal-card">
+        <div class="modal-head">
+          <div>
+            <p class="kicker">数据库</p>
+            <h3>导入 JSON</h3>
+          </div>
+          <button id="close-database-json-modal" class="ghost-button" type="button">关闭</button>
+        </div>
+
+        <label class="field">
+          <span>JSON 内容</span>
+          <textarea id="database-json-input" name="databaseJsonInput" rows="10" placeholder='支持单条对象或数组，例如：{"firstName":"Jane","lastName":"Doe","mailboxEmail":"jane_doe@ryy.asia"}'></textarea>
+        </label>
+
+        <div class="action-row">
+          <button id="database-import-submit" class="primary-button" type="button">
+            <span class="button-label">导入 JSON 到数据库</span>
+            <span class="button-spinner" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="database-result-modal" class="modal-backdrop" hidden>
+      <div class="modal-card modal-card-wide">
+        <div class="modal-head">
+          <div>
+            <p class="kicker">数据库</p>
+            <h3>原始数据</h3>
+          </div>
+          <button id="close-database-result-modal" class="ghost-button" type="button">关闭</button>
+        </div>
+
+        <div class="result-box modal-result-box">
+          <pre id="database-result">还没有运行。</pre>
+        </div>
+      </div>
     </div>
 
     <script src="./renderer.js"></script>

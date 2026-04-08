@@ -8,9 +8,12 @@
 - 生成去除背景信息和 `HWANG154` 的 `{原文件名}_folio.pdf`
 - 在 `~/Documents/marriott_missing_stay_auto_report/<last name>_<first name>/` 下保存全部产物
 - 产物按 `origin/` 和 `modify/` 分开保存
+- 支持在第 1 步上传证件，文件保存到姓名资料夹下的 `ID/`
 - 基于 PDF 解析出的姓名注册 Cloud Mail 邮箱
 - 使用新邮箱给 `tony.stig@icloud.com` 发送通知邮件
 - 邮箱注册成功后，把核心字段写入本地 SQLite 数据库
+- 基于本地数据库记录调用 `opencli createMarriottAccount` 注册万豪会员
+- 基于本地数据库记录调用 `opencli MarriottMissingStayRequest` 提交补登，并上传 `modify/` 下的脱敏 PDF
 
 ## 用法
 
@@ -41,6 +44,35 @@ npm run build:mac
 
 构建完成后，应用会生成在 `dist/mac/Marriott Folio Workflow.app`。
 
+第 3 步“注册万豪会员”依赖本机已经可用的 `opencli` 命令。桌面端会按以下参数执行：
+
+```bash
+opencli createMarriottAccount \
+  --first-name <数据库 firstName> \
+  --last-name <数据库 lastName> \
+  --country USA \
+  --zip-code <数据库 zipcode> \
+  --email <数据库 mailboxEmail> \
+  --password <数据库 psw> \
+  --remember-me false \
+  --marketing-emails true
+```
+
+第 4 步“补登住宿记录”会执行：
+
+```bash
+opencli MarriottMissingStayRequest \
+  --third-party-booking no \
+  --phone-number <数据库 phone> \
+  --hotel-name <数据库 hotel> \
+  --check-in-date <数据库 arrivalDate> \
+  --check-out-date <数据库 departureDate> \
+  --bill-copy digital \
+  --confirmation-number <数据库 confirmationNumber> \
+  --comments "Please credit this stay" \
+  --attachment <姓名资料夹/modify/*_folio.pdf>
+```
+
 可选参数：
 
 - `--output-root <path>`: 自定义输出根目录，默认是 `~/Documents/marriott_missing_stay_auto_report`
@@ -57,6 +89,7 @@ npm run build:mac
 
 - `firstName`
 - `lastName`
+- `memberNumber`
 - `hotel`
 - `total`
 - `arrivalDate`
@@ -91,7 +124,7 @@ npm run build:mac
 
 `hotel` 规则：
 
-- 固定值：`Rissai Valley, a Ritz-Carlton Reserve`
+- 固定值：`Rissai Valley, a Ritz-Carlton Reserve, China, Jiuzhaigou`
 
 `total` 规则：
 
@@ -118,6 +151,8 @@ npm run build:mac
     ├── notification-email.csv
     ├── notification-email.html
     └── notification-email.txt
+├── ID/
+│   └── 证件文件
 └── modify/
     ├── {原文件名}_folio.pdf
     ├── extracted.json

@@ -1,9 +1,12 @@
 const path = require('node:path');
 const fs = require('node:fs');
+const { Worker } = require('node:worker_threads');
 const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
-const { processPdfWorkflow } = require('../src/workflows/process-pdf');
+const { uploadIdentityDocumentWorkflow } = require('../src/workflows/upload-identity-document');
 const { registerEmailWorkflow } = require('../src/workflows/register-email');
-const { DATABASE_FILE_NAME, readWorkflowRecords, updateWorkflowRecord } = require('../src/storage/local-database');
+const { registerMarriottAccountWorkflow } = require('../src/workflows/register-marriott-account');
+const { requestMarriottMissingStayWorkflow } = require('../src/workflows/request-marriott-missing-stay');
+const { DATABASE_FILE_NAME, importWorkflowJson, readWorkflowRecords, updateWorkflowRecord } = require('../src/storage/local-database');
 
 function createWindow() {
   const window = new BrowserWindow({
@@ -53,6 +56,19 @@ function registerHandlers() {
     return result.canceled ? null : result.filePaths[0];
   });
 
+  ipcMain.handle('dialog:pickIdentityDocument', async () => {
+    const result = await dialog.showOpenDialog({
+      title: 'Select Identity Document',
+      properties: ['openFile'],
+      filters: [
+        { name: 'Documents', extensions: ['pdf', 'png', 'jpg', 'jpeg', 'heic', 'webp'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+
+    return result.canceled ? null : result.filePaths[0];
+  });
+
   ipcMain.handle('dialog:pickWorkspace', async () => {
     const result = await dialog.showOpenDialog({
       title: 'Select Existing Workspace Folder',
@@ -86,9 +102,20 @@ function registerHandlers() {
 
   ipcMain.handle('workflow:processPdf', async (_event, payload) => {
     try {
-      return await processPdfWorkflow({
+      return await runProcessPdfWorker({
         pdfPath: payload.pdfPath,
         outputRoot: payload.outputRoot || undefined
+      });
+    } catch (error) {
+      throw serializeError(error);
+    }
+  });
+
+  ipcMain.handle('workflow:uploadIdentityDocument', async (_event, payload) => {
+    try {
+      return await uploadIdentityDocumentWorkflow({
+        workspacePath: payload.workspacePath,
+        sourceFilePath: payload.sourceFilePath
       });
     } catch (error) {
       throw serializeError(error);
@@ -104,8 +131,41 @@ function registerHandlers() {
         mailApiBaseUrl: payload.mailApiBaseUrl,
         mailAdminEmail: payload.mailAdminEmail,
         mailAdminPassword: payload.mailAdminPassword,
+        mailboxEmail: payload.mailboxEmail || undefined,
         mailDomain: payload.mailDomain,
         notifyRecipient: payload.notifyRecipient
+      });
+    } catch (error) {
+      throw serializeError(error);
+    }
+  });
+
+  ipcMain.handle('workflow:registerMarriottAccount', async (_event, payload) => {
+    try {
+      return await registerMarriottAccountWorkflow({
+        workspacePath: payload.workspacePath,
+        databasePath: payload.databasePath || undefined,
+        opencliCommand: payload.opencliCommand || 'opencli',
+        country: payload.country || 'USA',
+        rememberMe: payload.rememberMe ?? false,
+        marketingEmails: payload.marketingEmails ?? true,
+        incognito: payload.incognito ?? false
+      });
+    } catch (error) {
+      throw serializeError(error);
+    }
+  });
+
+  ipcMain.handle('workflow:requestMarriottMissingStay', async (_event, payload) => {
+    try {
+      return await requestMarriottMissingStayWorkflow({
+        workspacePath: payload.workspacePath,
+        databasePath: payload.databasePath || undefined,
+        opencliCommand: payload.opencliCommand || 'opencli',
+        thirdPartyBooking: payload.thirdPartyBooking || 'no',
+        billCopy: payload.billCopy || 'digital',
+        comments: payload.comments || 'Please credit this stay',
+        incognito: payload.incognito ?? false
       });
     } catch (error) {
       throw serializeError(error);
@@ -147,6 +207,15 @@ function registerHandlers() {
     }
   });
 
+  ipcMain.handle('database:importJson', async (_event, payload) => {
+    try {
+      const resolvedPath = payload?.databasePath || path.join(app.getPath('documents'), 'marriott_missing_stay_auto_report', DATABASE_FILE_NAME);
+      return await importWorkflowJson(resolvedPath, payload?.json);
+    } catch (error) {
+      throw serializeError(error);
+    }
+  });
+
   ipcMain.handle('workspace:readExtraction', async (_event, workspacePath) => {
     try {
       const extractionPath = path.join(workspacePath, 'origin', 'extracted.json');
@@ -170,4 +239,36 @@ function registerHandlers() {
 
 function serializeError(error) {
   return new Error(error?.message || 'Unknown error');
+}
+
+function runProcessPdfWorker(payload) {
+  return new Promise((resolve, reject) => {
+    const workerPath = path.join(__dirname, 'workers', 'process-pdf-worker.js');
+    const worker = new Worker(workerPath, {
+      workerData: payload
+    });
+
+    let settled = false;
+
+    worker.once('message', (message) => {
+      settled = true;
+      if (message?.status === 'ok') {
+        resolve(message.result);
+        return;
+      }
+
+      reject(new Error(message?.message || 'Unknown worker error'));
+    });
+
+    worker.once('error', (error) => {
+      settled = true;
+      reject(error);
+    });
+
+    worker.once('exit', (code) => {
+      if (!settled && code !== 0) {
+        reject(new Error(`PDF worker exited with code ${code}`));
+      }
+    });
+  });
 }

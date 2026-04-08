@@ -17,6 +17,7 @@ async function registerEmailWorkflow({
   mailApiBaseUrl,
   mailAdminEmail,
   mailAdminPassword,
+  mailboxEmail,
   mailDomain = 'ryy.asia',
   notifyRecipient = 'tony.stig@icloud.com'
 }) {
@@ -39,9 +40,9 @@ async function registerEmailWorkflow({
     outputRoot
   });
 
-  const mailboxEmail = buildMailboxEmail(extraction.summary.guest, normalizedDomain);
-  if (!isValidEmail(mailboxEmail)) {
-    throw new Error(`Generated mailbox is invalid: ${mailboxEmail}`);
+  const resolvedMailboxEmail = String(mailboxEmail || '').trim() || buildMailboxEmail(extraction.summary.guest, normalizedDomain);
+  if (!isValidEmail(resolvedMailboxEmail)) {
+    throw new Error(`Generated mailbox is invalid: ${resolvedMailboxEmail}`);
   }
   const client = new CloudMailClient({ baseUrl: mailApiBaseUrl });
   const token = await client.genToken({
@@ -51,7 +52,7 @@ async function registerEmailWorkflow({
 
   const accounts = await client.listAccounts({ token });
   let account = Array.isArray(accounts)
-    ? accounts.find((entry) => normalizeEmail(entry.email) === normalizeEmail(mailboxEmail))
+    ? accounts.find((entry) => normalizeEmail(entry.email) === normalizeEmail(resolvedMailboxEmail))
     : null;
   const created = !account;
 
@@ -59,10 +60,10 @@ async function registerEmailWorkflow({
     try {
       account = await client.addAccount({
         token,
-        email: mailboxEmail
+        email: resolvedMailboxEmail
       });
     } catch (error) {
-      throw new Error(`${error.message} (generated mailbox: ${mailboxEmail})`);
+      throw new Error(`${error.message} (generated mailbox: ${resolvedMailboxEmail})`);
     }
   }
 
@@ -81,14 +82,14 @@ async function registerEmailWorkflow({
 
   const messagePreview = buildNotificationMessage({
     extraction,
-    mailboxEmail,
+    mailboxEmail: resolvedMailboxEmail,
     notifyRecipient
   });
 
   const sendResponse = await client.sendEmail({
     token,
-    sendEmail: mailboxEmail,
-    sendName: extraction.summary.guest.fullName || mailboxEmail,
+    sendEmail: resolvedMailboxEmail,
+    sendName: extraction.summary.guest.fullName || resolvedMailboxEmail,
     receiveEmail: notifyRecipient,
     subject: messagePreview.subject,
     content: messagePreview.html,
@@ -99,7 +100,7 @@ async function registerEmailWorkflow({
     provider: 'cloud-mail',
     apiBaseUrl: client.baseUrl,
     adminEmail: maskEmail(mailAdminEmail),
-    mailboxEmail,
+    mailboxEmail: resolvedMailboxEmail,
     accountId: account?.accountId || null,
     accountName: account?.name || extraction.summary.guest.fullName || '',
     created,
@@ -109,8 +110,8 @@ async function registerEmailWorkflow({
   };
 
   const notificationRecord = {
-    mailboxEmail,
-    sendName: extraction.summary.guest.fullName || mailboxEmail,
+    mailboxEmail: resolvedMailboxEmail,
+    sendName: extraction.summary.guest.fullName || resolvedMailboxEmail,
     receiveEmail: notifyRecipient,
     subject: messagePreview.subject,
     sentAt: new Date().toISOString(),
@@ -129,13 +130,13 @@ async function registerEmailWorkflow({
   const databaseRecord = await persistWorkflowRecord({
     workspace,
     extraction,
-    mailboxEmail
+    mailboxEmail: resolvedMailboxEmail
   });
 
   return {
     status: 'ok',
     workspaceDirectory: workspace.directory,
-    mailboxEmail,
+    mailboxEmail: resolvedMailboxEmail,
     created,
     artifacts: artifactPaths,
     database: databaseRecord
